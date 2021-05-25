@@ -16,6 +16,7 @@ import {
 } from './series-bar';
 import { seriesLabel } from './series-label';
 import { dataLabelsBarCreation, dataSeriesLabelBar } from './series-label-bar';
+import { debounce } from "debounce";
 
 export interface DataChartBarSmallMultiples{
   mainTitle: string;
@@ -66,7 +67,7 @@ export function dataChartBarSmallMultiples(data?: Partial<DataChartBarSmallMulti
   };
 }
 
-const colWidth = 450;
+const colWidth = 250;
 function computeGridTemplate(elem: SVGSVGElement, n: number) : {
   template: string,
   cols: number,
@@ -87,11 +88,15 @@ function computeGridTemplate(elem: SVGSVGElement, n: number) : {
   for (let i = 0; i < rows; i++) {
     gridRows.push('1fr');
   }
-  return {
-    template: gridRows.join(' ') + ' / ' +gridColumns.join(' '),
+  const result = {
+    template: gridRows.join(' ') + ' / ' + gridColumns.join(' '),
     cols: cols,
     rows: rows
   }
+
+  console.log(result)
+
+  return result
 }
 
 function computeGridArea(row: number, col: number) {
@@ -120,7 +125,7 @@ export function chartBarSmallMultiples<Datum extends DataChartBarSmallMultiples,
       for (let i = 0; i < n; i++) {
         const gridArea = computeGridArea(row, col);
         const chartContainer = root
-        .append('g')
+        .append('svg')
         .classed('sub-chart', true)
         .attr('grid-template', '1fr / 1fr')
         .attr('grid-area', gridArea);
@@ -198,13 +203,31 @@ export function chartBarSmallMultiples<Datum extends DataChartBarSmallMultiples,
     });
 }
 
+function updateGrid<Datum extends DataChartBarSmallMultiples>(chartData: DataChartBarSmallMultiples, i: number, g: SVGSVGElement[] | ArrayLike<SVGSVGElement>) {
+  const s = select<SVGSVGElement, Datum>(g[i]);
+  const n = chartData.gridValues.length
+  const gridTemplate = computeGridTemplate(g[i], n);
+  // TODO: debounce
+  s.selectAll('.root').attr('grid-template', gridTemplate.template);
+  let row = 1;
+  let col = 1;
+  s.selectAll('.sub-chart').each(function(d, j, h) {
+    const gridArea = computeGridArea(row, col);
+    select(h[j]).attr('grid-area',gridArea)
+    col++;
+    if (col > gridTemplate.cols) {
+      col = 1;
+      row++;
+    }
+  })
+}
+
+const debouncedUpdateGrid = debounce(updateGrid, 100);
+
 export function renderChartBarSmallMultiples<Datum extends DataChartBarSmallMultiples, PElement extends BaseType, PDatum>(
   selection: Selection<SVGSVGElement, Datum, PElement, PDatum>
 ): Selection<SVGSVGElement, Datum, PElement, PDatum> {
   return selection.each(function (chartData, i, g) {
-    const s = select<SVGSVGElement, Datum>(g[i]);
-    const n = chartData.gridValues.length
-    const gridTemplate = computeGridTemplate(g[i], n);
-    s.selectAll('.root').attr('grid-template', gridTemplate.template);
+    debouncedUpdateGrid(chartData, i, g);
   });
 }
