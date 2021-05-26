@@ -94,8 +94,6 @@ function computeGridTemplate(elem: SVGSVGElement, n: number) : {
     rows: rows
   }
 
-  console.log(result)
-
   return result
 }
 
