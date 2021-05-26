@@ -133,3 +133,45 @@ export function renderSeriesPoint<
       .call((t) => selection.dispatch('barupdatetransition', { detail: { transition: t } }));
   });
 }
+
+export function seriesPointLine<
+  GElement extends Element,
+  Datum extends DataSeriesPointCustom,
+  PElement extends BaseType,
+  PDatum
+>(
+  selection: Selection<GElement, Datum, PElement, PDatum>
+): Selection<GElement, Datum, PElement, PDatum> {
+  return selection
+    .classed('series-point-line', true)
+    // .attr('fill', COLORS_CATEGORICAL[0])
+    .on('render.seriespointline', function (e, d) {
+      renderSeriesPointLine(select<GElement, DataSeriesPointCustom>(this));
+    });
+}
+
+export function renderSeriesPointLine<
+  GElement extends Element,
+  Datum extends DataSeriesPointCustom,
+  PElement extends BaseType,
+  PDatum
+>(
+  selection: Selection<GElement, Datum, PElement, PDatum>
+): Selection<GElement, Datum, PElement, PDatum> {
+  return selection.each((d, i, g) => {
+    const series = select(g[i]);
+    // remove old polyline
+    series.selectAll('polyline').remove()
+
+    const data = d.data instanceof Function ? d.data(series) : d.data;
+
+    const points = data.map((point) => {
+      return point.x + ',' + point.y
+    }).join(' ')
+    series.append('polyline')
+    .attr('points', points)
+    .attr('stroke', 'black')
+    .attr('fill', 'none')
+    .attr('stroke-width', 1);
+  });
+}
