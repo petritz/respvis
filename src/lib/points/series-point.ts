@@ -140,13 +140,14 @@ export function seriesPointLine<
   PElement extends BaseType,
   PDatum
 >(
-  selection: Selection<GElement, Datum, PElement, PDatum>
+  selection: Selection<GElement, Datum, PElement, PDatum>,
+  orderComparator?: (a: any, b: any) => number
 ): Selection<GElement, Datum, PElement, PDatum> {
   return selection
     .classed('series-point-line', true)
     // .attr('fill', COLORS_CATEGORICAL[0])
     .on('render.seriespointline', function (e, d) {
-      renderSeriesPointLine(select<GElement, DataSeriesPointCustom>(this));
+      renderSeriesPointLine(select<GElement, DataSeriesPointCustom>(this), orderComparator);
     });
 }
 
@@ -156,7 +157,8 @@ export function renderSeriesPointLine<
   PElement extends BaseType,
   PDatum
 >(
-  selection: Selection<GElement, Datum, PElement, PDatum>
+  selection: Selection<GElement, Datum, PElement, PDatum>,
+  orderComparator?: (a: any, b: any) => number
 ): Selection<GElement, Datum, PElement, PDatum> {
   return selection.each((d, i, g) => {
     const series = select(g[i]);
@@ -164,6 +166,10 @@ export function renderSeriesPointLine<
     series.selectAll('polyline').remove()
 
     const data = d.data instanceof Function ? d.data(series) : d.data;
+
+    if(orderComparator != null) {
+      data.sort(orderComparator)
+    }
 
     const points = data.map((point) => {
       return point.x + ',' + point.y
