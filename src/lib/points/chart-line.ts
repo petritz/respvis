@@ -44,11 +44,11 @@ export function chartLine<Datum extends DataChartPoint, PElement extends BaseTyp
         .attr('opacity', 0);
 
       const dataPoints = dataSeriesPoint(d)
-      const pointSeries = drawArea
-        .append('g')
-        .datum(dataPoints)
-        .call((s) => seriesPoint(s))
-        .attr('grid-area', '1 / 1 / 2 / 2');
+      // const pointSeries = drawArea
+      //   .append('g')
+      //   .datum(dataPoints)
+      //   .call((s) => seriesPoint(s))
+      //   .attr('grid-area', '1 / 1 / 2 / 2');
 
       // Supply comparator for line drawing, just order by x
       const orderByX = (p1, p2) => {
