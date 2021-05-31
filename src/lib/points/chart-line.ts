@@ -1,6 +1,6 @@
 import { BaseType, select, Selection } from 'd3-selection';
 import { axisBottom, axisLeft, ConfigureAxisFn, DataAxis, dataAxis } from '../axis';
-import { chart, textHorizontalAttrs, textTitleAttrs, textVerticalAttrs } from '../core';
+import {chart, COLORS_CATEGORICAL, textHorizontalAttrs, textTitleAttrs, textVerticalAttrs} from '../core';
 import {
   DataChartPoint
 } from './chart-point';
@@ -55,10 +55,14 @@ export function chartLine<Datum extends DataChartPoint, PElement extends BaseTyp
         return p1.x > p2.x ? -1 : 1
       }
 
+      // TODO: Make customizable
+      const lineThickness = 2
+      const lineColor = COLORS_CATEGORICAL[6]
+
       const pointSeriesLine = drawArea
         .append('g')
         .datum(dataPoints)
-        .call((s) => seriesPointLine(s, orderByX))
+        .call((s) => seriesPointLine(s, lineThickness, lineColor, orderByX))
         .attr('grid-area', '1 / 1 / 2 / 2');
 
       const leftAxis = root

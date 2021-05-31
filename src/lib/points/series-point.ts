@@ -141,13 +141,15 @@ export function seriesPointLine<
   PDatum
 >(
   selection: Selection<GElement, Datum, PElement, PDatum>,
+  lineThickness: number = 1,
+  lineColor: string = "black",
   orderComparator?: (a: any, b: any) => number
 ): Selection<GElement, Datum, PElement, PDatum> {
   return selection
     .classed('series-point-line', true)
     // .attr('fill', COLORS_CATEGORICAL[0])
     .on('render.seriespointline', function (e, d) {
-      renderSeriesPointLine(select<GElement, DataSeriesPointCustom>(this), orderComparator);
+      renderSeriesPointLine(select<GElement, DataSeriesPointCustom>(this), lineThickness, lineColor, orderComparator);
     });
 }
 
@@ -158,6 +160,8 @@ export function renderSeriesPointLine<
   PDatum
 >(
   selection: Selection<GElement, Datum, PElement, PDatum>,
+  lineThickness: number = 1,
+  lineColor: string = "black",
   orderComparator?: (a: any, b: any) => number
 ): Selection<GElement, Datum, PElement, PDatum> {
   return selection.each((d, i, g) => {
@@ -176,8 +180,8 @@ export function renderSeriesPointLine<
     }).join(' ')
     series.append('polyline')
     .attr('points', points)
-    .attr('stroke', 'black')
+    .attr('stroke', lineColor)
     .attr('fill', 'none')
-    .attr('stroke-width', 1);
+    .attr('stroke-width', lineThickness);
   });
 }
