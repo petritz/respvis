@@ -50,12 +50,15 @@ export function chartLine<Datum extends DataChartPoint, PElement extends BaseTyp
         .call((s) => seriesPoint(s))
         .attr('grid-area', '1 / 1 / 2 / 2');
 
+      // Supply comparator for line drawing, just order by x
+      const orderByX = (p1, p2) => {
+        return p1.x > p2.x ? -1 : 1
+      }
+
       const pointSeriesLine = drawArea
         .append('g')
         .datum(dataPoints)
-        .call((s) => seriesPointLine(s, (p1, p2) => {
-          return p1.x > p2.x ? -1 : 1
-        }))
+        .call((s) => seriesPointLine(s, orderByX))
         .attr('grid-area', '1 / 1 / 2 / 2');
 
       const leftAxis = root
