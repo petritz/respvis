@@ -257,7 +257,6 @@ function displayNextChart(){
       value.setAttribute('style', 'display:none;visibility:hidden;');
     }
   })
-  // console.log(curChartKey+1);
 }
 
 function updateGrid<Datum extends DataChartBarSmallMultiples>(chartData: DataChartBarSmallMultiples, i: number, g: SVGSVGElement[] | ArrayLike<SVGSVGElement>) {
@@ -265,7 +264,6 @@ function updateGrid<Datum extends DataChartBarSmallMultiples>(chartData: DataCha
   const n = chartData.gridValues.length
   const gridTemplate = computeGridTemplate(g[i], n);
   // TODO: debounce
-  console.log("checking");
 
   if(gridTemplate.cols === 1){
     s.select('.root').attr('grid-template', '1fr / 1fr');
