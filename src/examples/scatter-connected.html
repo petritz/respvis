@@ -42,6 +42,7 @@
         priceScale = d3.scaleLinear().domain(priceDomain),
         priceAxisTitle = 'Price';
 
+      const labels = data.labels
       const wideMediaQuery = 'screen and (min-width: 40rem)';
 
       const root = d3.select('#chart'),
@@ -53,6 +54,7 @@
           crossValues: prices,
           crossTitle: 'Price in $1000',
           crossScale: priceScale,
+          labels: labels,
           radiuses: 5,
         }),
         chart = root.append('svg').datum(chartDatum).call(respVis.chartPointConnected),

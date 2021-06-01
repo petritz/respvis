@@ -7,6 +7,7 @@ export interface DataPoint extends Position {
   radius: number;
   index: number;
   key: string;
+  label?: string;
 }
 
 export interface DataSeriesPointCustom extends DataSeries<DataPoint> {}
@@ -27,6 +28,7 @@ export interface DataPointsCreation {
   crossScale: ScaleAny<any, number, number>;
   radiuses: number[] | number;
   keys?: string[];
+  labels?: string[];
 }
 
 export function dataPointsCreation(data?: Partial<DataPointsCreation>): DataPointsCreation {
@@ -36,6 +38,7 @@ export function dataPointsCreation(data?: Partial<DataPointsCreation>): DataPoin
     crossValues: data?.crossValues || [],
     crossScale: data?.crossScale || scaleLinear().domain([0, 1]),
     radiuses: data?.radiuses || 5,
+    labels: data?.labels || []
   };
 }
 
@@ -67,6 +70,7 @@ export function dataPoints(creationData: DataPointsCreation, bounds: Size): Data
       x: creationData.mainScale(x)!,
       y: creationData.crossScale(y)!,
       radius: r,
+      label: creationData.labels?.[i]
     });
   }
 
@@ -131,6 +135,67 @@ export function renderSeriesPoint<
       .attr('cy', (d) => d.y)
       .attr('r', (d) => d.radius)
       .call((t) => selection.dispatch('barupdatetransition', { detail: { transition: t } }));
+  });
+}
+
+export function seriesPointLabels<
+  GElement extends Element,
+  Datum extends DataSeriesPointCustom,
+  PElement extends BaseType,
+  PDatum
+>(
+  selection: Selection<GElement, Datum, PElement, PDatum>
+): Selection<GElement, Datum, PElement, PDatum> {
+  return selection
+    .classed('series-point-labels', true)
+    // .attr('fill', COLORS_CATEGORICAL[0])
+    .on('render.seriespointlabels', function (e, d) {
+      renderSeriesLabels(select<GElement, DataSeriesPointCustom>(this));
+    });
+}
+
+export function renderSeriesLabels<
+  GElement extends Element,
+  Datum extends DataSeriesPointCustom,
+  PElement extends BaseType,
+  PDatum
+>(
+  selection: Selection<GElement, Datum, PElement, PDatum>
+): Selection<GElement, Datum, PElement, PDatum> {
+  return selection.each((d, i, g) => {
+    const series = select(g[i]);
+    series
+      .selectAll<SVGCircleElement, DataPoint>('text')
+      .data(d.data instanceof Function ? d.data(series) : d.data, d.key)
+      .join(
+        (enter) =>
+          enter
+            .append('text')
+            .classed('label', true)
+            .attr('x', (d) => d.x)
+            .attr('y', (d) => d.y - 15)
+            .call((s) => selection.dispatch('textenter', { detail: { selection: s } })),
+        undefined,
+        (exit) =>
+          exit
+            .classed('exiting', true)
+            .call((s) => selection.dispatch('textexit', { detail: { selection: s } }))
+            .transition()
+            .duration(250)
+            .attr('x', (d) => d.x)
+            .attr('y', (d) => d.y - 15)
+            .remove()
+            .call((t) => selection.dispatch('textexittransition', { detail: { transition: t } }))
+      )
+      .call((s) => selection.dispatch('textupdate', { detail: { selection: s } }))
+      .transition()
+      .duration(250)
+      .attr('x', (d) => d.x)
+      .attr('y', (d) => d.y - 15)
+      .attr('dominant-baseline','middle')
+      .attr('text-anchor', 'middle')
+      .text((d) => d.label || '')
+      .call((t) => selection.dispatch('textexittransition', { detail: { transition: t } }));
   });
 }
 
