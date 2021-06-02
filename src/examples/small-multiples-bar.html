@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+  <head>
+    <title>RespVis - Small Multiples Bar Chart</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8" />
+    <style>
+      body {
+        background-color: floralwhite;
+      }
+
+      #chart {
+        width: 100%;
+        height: 80vh;
+        min-height: 25rem;
+      }
+      
+      .arrow {
+        display: inline-block;
+        width: 0; 
+        height: 0; 
+        border-top: 25px solid transparent;
+        border-bottom: 25px solid transparent;
+        margin: 5px;
+      }
+
+      .arrow-right {
+        border-left: 25px solid #000;
+        right: 0;
+      }
+
+      .arrow-left {
+        border-right: 25px solid #000; 
+        left: 0;
+      }
+
+      .container {
+        font-size: 24px;
+      }
+
+      .arrow-container {
+        text-align: end;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Small Multiples Bar Chart</h1>
+    <div class="arrow-container" chart-numer="0">
+      <a class="arrow arrow-left" role="button"></a>
+      <a class="arrow arrow-right" role="button"></a>
+    </div> 
+    <div id="chart">
+    </div>
+    <script src="./vendor/d3.v6.js"></script>
+    <script src="../respvis.js"></script>
+    <script type="module">
+      import data from './data/department-revenues.js';
+
+      const outerData = data.departments;
+      const mainValues = data.months;
+      const crossValues = data.revenues;
+
+      const root = d3.select('#chart');
+      const chartDatum = respVis.dataChartBarSmallMultiples({
+        mainValues: mainValues,
+        mainTitle: 'Months',
+        crossValues: crossValues,
+        crossTitle: 'Revenues',
+        gridValues: outerData
+      })
+      const chart = root.append('svg').datum(chartDatum).call(respVis.chartBarSmallMultiples)
+    </script>
+  </body>
+</html>

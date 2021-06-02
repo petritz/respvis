@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+  <head>
+    <title>RespVis - Connected Scatterplot</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8" />
+    <style>
+      #chart {
+        width: 100%;
+        height: 80vh;
+        min-height: 25rem;
+      }
+
+      body {
+        background-color: floralwhite;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Connected Scatterplot</h1>
+    <div id="chart"></div>
+    <script src="./vendor/d3.v6.js"></script>
+    <script src="../respvis.js"></script>
+    <script type="module">
+      import data from './data/gallon-miles-year.js';
+
+      const costs = data.map(item => item.cost),
+        minCost = Math.min(...costs),
+        maxCost = Math.max(...costs),
+        costSpan = maxCost - minCost,
+        costDomain = [minCost - costSpan * 0.1, maxCost + costSpan * 0.1],
+        costFormatter = (cost) => `$${cost}`,
+        costScale = d3.scaleLinear().domain(costDomain),
+        costAxisTitle = 'Cost per gallon';
+      
+      const miles = data.map(item => item.miles),
+        minMile = Math.min(...miles),
+        maxMile = Math.max(...miles),
+        mileSpan = maxMile - minMile,
+        mileDomain = [minMile - mileSpan * 0.1, maxMile + mileSpan * 0.1],
+        mileScale = d3.scaleLinear().domain(mileDomain),
+        mileAxisTitle = 'Miles per person per year';
+      const years = data.map(item => item.year)
+
+      const wideMediaQuery = 'screen and (min-width: 40rem)';
+
+      const root = d3.select('#chart'),
+        chartDatum = respVis.dataChartPoint({
+          mainValues: miles,
+          mainTitle: mileAxisTitle,
+          mainScale: mileScale,
+          configureMainAxis: (a) => a.ticks(window.matchMedia(wideMediaQuery).matches ? 10 : 5),
+          crossValues: costs,
+          crossTitle: costAxisTitle,
+          crossScale: costScale,
+          labels: years,
+          radiuses: 5,
+        }),
+        chart = root.append('svg').datum(chartDatum).call(respVis.chartPointConnected),
+        zoom = d3
+          .zoom()
+          .scaleExtent([1, 20])
+          .on('zoom', function (e, d) {
+            mileScale.domain(e.transform.rescaleX(mileScale.domain(mileDomain)).domain());
+            costScale.domain(e.transform.rescaleY(costScale.domain(costDomain)).domain());
+            chart.call(respVis.updateChart);
+          }),
+        drawArea = chart
+          .selectAll('.draw-area')
+          .call(zoom)
+          .on('render.zoom', (e) => {
+            const { width, height } = d3.select(e.target).layout(),
+              extent = [
+                [0, 0],
+                [width, height],
+              ];
+            zoom.extent(extent).translateExtent(extent);
+          }),
+        pointSeries = chart
+          .selectAll('.series-point')
+          .on('mouseover', (e) => hoverPoint(e.target, true))
+          .on('mouseout', (e) => hoverPoint(e.target, false)),
+        pointColor = pointSeries.attr('fill'),
+        pointHighlightColor = respVis.brighten(pointColor, 0.5);
+
+      chart.on('resize', configure);
+      configure();
+
+      function configure() {
+        if (window.matchMedia(wideMediaQuery).matches) {
+        }
+      }
+
+      function hoverPoint(element, hover) {
+        const selection = d3.select(element);
+        const datum = selection.datum();
+        selection.attr('fill', hover ? pointHighlightColor : null).raise();
+        chart
+          .selectAll('.axis-main .tick')
+          .filter((d, i) => i === datum.index)
+          .attr('text-decoration', hover ? 'underline' : null);
+      }
+    </script>
+  </body>
+</html>

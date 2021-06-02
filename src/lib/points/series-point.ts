@@ -160,3 +160,55 @@ export function seriesPointRender<
       .call((s) => selection.dispatch('pointupdate', { detail: { selection: s } }));
   });
 }
+
+export function seriesPointLine<
+  GElement extends Element,
+  Datum extends DataSeriesPointCustom,
+  PElement extends BaseType,
+  PDatum
+>(
+  selection: Selection<GElement, Datum, PElement, PDatum>,
+  lineThickness: number = 1,
+  lineColor: string = "black",
+  orderComparator?: (a: any, b: any) => number
+): Selection<GElement, Datum, PElement, PDatum> {
+  return selection
+    .classed('series-point-line', true)
+    // .attr('fill', COLORS_CATEGORICAL[0])
+    .on('render.seriespointline', function (e, d) {
+      renderSeriesPointLine(select<GElement, DataSeriesPointCustom>(this), lineThickness, lineColor, orderComparator);
+    });
+}
+
+export function renderSeriesPointLine<
+  GElement extends Element,
+  Datum extends DataSeriesPointCustom,
+  PElement extends BaseType,
+  PDatum
+>(
+  selection: Selection<GElement, Datum, PElement, PDatum>,
+  lineThickness: number = 1,
+  lineColor: string = "black",
+  orderComparator?: (a: any, b: any) => number
+): Selection<GElement, Datum, PElement, PDatum> {
+  return selection.each((d, i, g) => {
+    const series = select(g[i]);
+    // remove old polyline
+    series.selectAll('polyline').remove()
+
+    const data = d.data instanceof Function ? d.data(series) : d.data;
+
+    if(orderComparator != null) {
+      data.sort(orderComparator)
+    }
+
+    const points = data.map((point) => {
+      return point.x + ',' + point.y
+    }).join(' ')
+    series.append('polyline')
+    .attr('points', points)
+    .attr('stroke', lineColor)
+    .attr('fill', 'none')
+    .attr('stroke-width', lineThickness);
+  });
+}

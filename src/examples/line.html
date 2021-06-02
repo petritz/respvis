@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+  <head>
+    <title>RespVis - Line</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8" />
+    <style>
+      #chart {
+        width: 100%;
+        height: 50vh;
+        min-height: 25rem;
+      }
+
+      body {
+        background-color: floralwhite;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Line Chart</h1>
+    <div id="chart"></div>
+    <script src="./vendor/d3.v6.js"></script>
+    <script src="../respvis.js"></script>
+    <script type="module">
+      import data from './data/fire_dep_runs.js';
+
+      // data for x-axis
+      const year = data.year,
+              minYear = Math.min(...year),
+              maxYear = Math.max(...year),
+              yearDomain = [minYear, maxYear],
+              yearScale = d3.scaleLinear().domain(yearDomain),
+              yearAxisTitle = 'Year';
+
+      // data for y-axis
+      const runs = data.runs,
+              minRuns = Math.min(...runs),
+              maxRuns = Math.max(...runs),
+              runSpan = maxRuns - minRuns,
+              runDomain = [minRuns- runSpan * 0.05, maxRuns + runSpan * 0.05],
+              runScale = d3.scaleLinear().domain(runDomain),
+              runAxisTitle = 'Fire Department Runs in Graz';
+
+      const wideMediaQuery = 'screen and (min-width: 40rem)';
+
+      const root = d3.select('#chart'),
+        chartDatum = respVis.dataChartPoint({
+          mainValues: year,
+          mainTitle: yearAxisTitle,
+          mainScale: yearScale,
+          configureMainAxis: (a) => a.ticks(window.matchMedia(wideMediaQuery).matches ? 10 : 5),
+          crossValues: runs,
+          crossTitle: runAxisTitle,
+          crossScale: runScale,
+        }),
+        chart = root.append('svg').datum(chartDatum).call(respVis.chartLine)
+
+      chart.on('resize', configure);
+      configure();
+
+      function configure() {
+        if (window.matchMedia(wideMediaQuery).matches) {
+        }
+      }
+    </script>
+  </body>
+</html>
