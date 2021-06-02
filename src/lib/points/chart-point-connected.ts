@@ -10,6 +10,7 @@ import {
   dataSeriesPoint,
   seriesPoint,
   seriesPointLine,
+  seriesPointLabels
 } from './series-point';
 
 
@@ -55,6 +56,12 @@ export function chartPointConnected<Datum extends DataChartPoint, PElement exten
         .datum(dataPoints)
         .call((s) => seriesPointLine(s))
         .attr('grid-area', '1 / 1 / 2 / 2');
+
+      const pointSeriesLabels = drawArea
+      .append('g')
+      .datum(dataPoints)
+      .call((s) => seriesPointLabels(s))
+      .attr('grid-area', '1 / 1 / 2 / 2');
 
       const leftAxis = root
         .append('g')
