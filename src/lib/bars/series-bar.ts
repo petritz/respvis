@@ -1,12 +1,11 @@
 import { scaleBand, ScaleBand, ScaleContinuousNumeric, scaleLinear } from 'd3-scale';
 import { BaseType, select, Selection } from 'd3-selection';
-import { COLORS_CATEGORICAL } from '../core';
+import { COLORS_CATEGORICAL, debug, nodeToString } from '../core';
 import { Rect, rectMinimized, rectToAttrs } from '../core/utility/rect';
 import { dataSeries, DataSeries } from '../core/series';
 import { Size } from '../core/utils';
 import { Transition } from 'd3-transition';
-
-export const COLOR_BAR = COLORS_CATEGORICAL[0];
+import { easeCubicOut } from 'd3-ease';
 
 export enum Orientation {
   Vertical,
@@ -60,7 +59,7 @@ export function dataBarsCreation(data?: Partial<DataBarsCreation>): DataBarsCrea
 
 export function dataSeriesBar(creationData: DataBarsCreation): DataSeriesBar {
   const seriesData: DataSeriesBar = {
-    ...dataSeriesBarCustom({ data: (s) => dataBars(seriesData.creation, s.layout()) }),
+    ...dataSeriesBarCustom({ data: (s) => dataBars(seriesData.creation, s.bounds()!) }),
     creation: creationData,
   };
   return seriesData;
@@ -114,9 +113,20 @@ export function seriesBar<
 ): Selection<GElement, Datum, PElement, PDatum> {
   return selection
     .classed('series-bar', true)
-    .attr('fill', COLOR_BAR)
+    .attr('fill', COLORS_CATEGORICAL[0])
+    .on(
+      'render.seriesbar-initial',
+      function () {
+        debug(`render on data change on ${nodeToString(this)}`);
+        select(this).on('datachange.seriesbar', function () {
+          debug(`data change on ${nodeToString(this)}`);
+          select(this).dispatch('render');
+        });
+      },
+      { once: true }
+    )
     .on('render.seriesbar', function (e, d) {
-      renderSeriesBar(select<GElement, DataSeriesBarCustom>(this));
+      seriesBarRender(select<GElement, DataSeriesBarCustom>(this));
     });
 }
 
@@ -126,7 +136,7 @@ export interface JoinEvent<GElement extends Element, Datum>
 export interface JoinTransitionEvent<GElement extends Element, Datum>
   extends CustomEvent<{ transition: Transition<GElement, Datum> }> {}
 
-export function renderSeriesBar<
+export function seriesBarRender<
   GElement extends Element,
   Datum extends DataSeriesBarCustom,
   PElement extends BaseType,
@@ -135,6 +145,7 @@ export function renderSeriesBar<
   selection: Selection<GElement, Datum, PElement, PDatum>
 ): Selection<GElement, Datum, PElement, PDatum> {
   return selection.each((d, i, g) => {
+    debug(`render bar series on ${nodeToString(g[i])}`);
     const series = select(g[i]);
     series
       .selectAll<SVGRectElement, DataBar>('rect')
@@ -150,17 +161,22 @@ export function renderSeriesBar<
         (exit) =>
           exit
             .classed('exiting', true)
+            .call((s) =>
+              s
+                .transition('minimize')
+                .duration(250)
+                .call((t) => rectToAttrs(t, (d) => rectMinimized(d)))
+                .remove()
+            )
             .call((s) => selection.dispatch('barexit', { detail: { selection: s } }))
-            .transition()
-            .duration(250)
-            .call((t) => rectToAttrs(t, (d) => rectMinimized(d)))
-            .remove()
-            .call((t) => selection.dispatch('barexittransition', { detail: { transition: t } }))
       )
-      .call((s) => selection.dispatch('barupdate', { detail: { selection: s } }))
-      .transition()
-      .duration(250)
-      .call((t) => rectToAttrs(t, (d) => d))
-      .call((t) => selection.dispatch('barupdatetransition', { detail: { transition: t } }));
+      .call((s) =>
+        s
+          .transition('position')
+          .duration(250)
+          .ease(easeCubicOut)
+          .call((t) => rectToAttrs(t, (d) => d))
+      )
+      .call((s) => selection.dispatch('barupdate', { detail: { selection: s } }));
   });
 }

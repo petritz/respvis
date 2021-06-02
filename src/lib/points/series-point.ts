@@ -1,6 +1,15 @@
+import { easeCubicOut } from 'd3-ease';
 import { scaleLinear } from 'd3-scale';
 import { BaseType, select, Selection } from 'd3-selection';
-import { COLORS_CATEGORICAL, dataSeries, DataSeries, Position, ScaleAny } from '../core';
+import {
+  COLORS_CATEGORICAL,
+  dataSeries,
+  DataSeries,
+  debug,
+  nodeToString,
+  Position,
+  ScaleAny,
+} from '../core';
 import { Size } from '../core/utils';
 
 export interface DataPoint extends Position {
@@ -36,6 +45,7 @@ export function dataPointsCreation(data?: Partial<DataPointsCreation>): DataPoin
     crossValues: data?.crossValues || [],
     crossScale: data?.crossScale || scaleLinear().domain([0, 1]),
     radiuses: data?.radiuses || 5,
+    keys: data?.keys,
   };
 }
 
@@ -45,7 +55,7 @@ export interface DataSeriesPoint extends DataSeriesPointCustom {
 
 export function dataSeriesPoint(creationData: DataPointsCreation): DataSeriesPoint {
   const seriesData: DataSeriesPoint = {
-    ...dataSeriesPointCustom({ data: (s) => dataPoints(seriesData.creation, s.layout()) }),
+    ...dataSeriesPointCustom({ data: (s) => dataPoints(seriesData.creation, s.bounds()!) }),
     creation: creationData,
   };
   return seriesData;
@@ -84,12 +94,23 @@ export function seriesPoint<
   return selection
     .classed('series-point', true)
     .attr('fill', COLORS_CATEGORICAL[0])
+    .on(
+      'render.seriespoint-initial',
+      function () {
+        debug(`render on data change on ${nodeToString(this)}`);
+        select(this).on('datachange.seriespoint', function () {
+          debug(`data change on ${nodeToString(this)}`);
+          select(this).dispatch('render');
+        });
+      },
+      { once: true }
+    )
     .on('render.seriespoint', function (e, d) {
-      renderSeriesPoint(select<GElement, DataSeriesPointCustom>(this));
+      seriesPointRender(select<GElement, DataSeriesPointCustom>(this));
     });
 }
 
-export function renderSeriesPoint<
+export function seriesPointRender<
   GElement extends Element,
   Datum extends DataSeriesPointCustom,
   PElement extends BaseType,
@@ -98,6 +119,7 @@ export function renderSeriesPoint<
   selection: Selection<GElement, Datum, PElement, PDatum>
 ): Selection<GElement, Datum, PElement, PDatum> {
   return selection.each((d, i, g) => {
+    debug(`render point series on ${nodeToString(g[i])}`);
     const series = select(g[i]);
     series
       .selectAll<SVGCircleElement, DataPoint>('circle')
@@ -115,21 +137,26 @@ export function renderSeriesPoint<
         (exit) =>
           exit
             .classed('exiting', true)
-            .call((s) => selection.dispatch('barexit', { detail: { selection: s } }))
-            .transition()
-            .duration(250)
-            .attr('cx', (d) => d.x)
-            .attr('cy', (d) => d.y)
-            .attr('r', 0)
-            .remove()
-            .call((t) => selection.dispatch('barexittransition', { detail: { transition: t } }))
+            .call((s) =>
+              s
+                .transition('exit')
+                .duration(250)
+                .attr('cx', (d) => d.x)
+                .attr('cy', (d) => d.y)
+                .attr('r', 0)
+                .remove()
+            )
+            .call((s) => selection.dispatch('pointexit', { detail: { selection: s } }))
       )
-      .call((s) => selection.dispatch('barupdate', { detail: { selection: s } }))
-      .transition()
-      .duration(250)
-      .attr('cx', (d) => d.x)
-      .attr('cy', (d) => d.y)
-      .attr('r', (d) => d.radius)
-      .call((t) => selection.dispatch('barupdatetransition', { detail: { transition: t } }));
+      .call((s) =>
+        s
+          .transition('update')
+          .duration(250)
+          .ease(easeCubicOut)
+          .attr('cx', (d) => d.x)
+          .attr('cy', (d) => d.y)
+          .attr('r', (d) => d.radius)
+      )
+      .call((s) => selection.dispatch('pointupdate', { detail: { selection: s } }));
   });
 }
