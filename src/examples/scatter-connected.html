@@ -32,9 +32,7 @@
         costFormatter = (cost) => `$${cost}`,
         costScale = d3.scaleLinear().domain(costDomain),
         costAxisTitle = 'Cost per gallon';
-
-      console.log(minCost, maxCost)
-      console.log(costDomain)
+      
       const miles = data.map(item => item.miles),
         minMile = Math.min(...miles),
         maxMile = Math.max(...miles),
