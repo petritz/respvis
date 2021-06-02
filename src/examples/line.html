@@ -36,7 +36,8 @@
       const runs = data.runs,
               minRuns = Math.min(...runs),
               maxRuns = Math.max(...runs),
-              runDomain = [minRuns- minRuns * 0.05, maxRuns],
+              runSpan = maxRuns - minRuns,
+              runDomain = [minRuns- runSpan * 0.05, maxRuns + runSpan * 0.05],
               runScale = d3.scaleLinear().domain(runDomain),
               runAxisTitle = 'Fire Department Runs in Graz';
 
