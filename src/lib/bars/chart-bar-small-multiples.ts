@@ -74,7 +74,6 @@ function computeGridTemplate(elem: SVGSVGElement, n: number) : {
   rows: number
 } {
   const svgWidth = elem.clientWidth;
-  console.log(svgWidth, elem)
   let cols = Math.ceil(Math.sqrt(n));
   if (cols * colWidth > svgWidth) {
     cols = Math.floor(svgWidth / colWidth);
