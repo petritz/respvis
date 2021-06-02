@@ -1,23 +1,25 @@
 import { BaseType, select, Selection } from 'd3-selection';
 import { axisBottom, axisLeft, ConfigureAxisFn, DataAxis, dataAxis } from '../axis';
-import {chart, COLORS_CATEGORICAL, textHorizontalAttrs, textTitleAttrs, textVerticalAttrs} from '../core';
+import { chart, textHorizontalAttrs, textTitleAttrs, textVerticalAttrs } from '../core';
 import {
   DataChartPoint
 } from './chart-point';
 import {
   dataPointsCreation,
   DataPointsCreation,
+  DataSeriesPoint,
   dataSeriesPoint,
   seriesPoint,
   seriesPointLine,
+  seriesPointLabels
 } from './series-point';
 
 
-export function chartLine<Datum extends DataChartPoint, PElement extends BaseType, PDatum>(
+export function chartPointConnected<Datum extends DataChartPoint, PElement extends BaseType, PDatum>(
   selection: Selection<SVGSVGElement, Datum, PElement, PDatum>
 ): Selection<SVGSVGElement, Datum, PElement, PDatum> {
   return chart(selection)
-    .classed('chart-line', true)
+    .classed('chart-point-connected', true)
     .each((d, i, g) => {
       const s = select<SVGSVGElement, Datum>(g[i])
         .layout('display','grid')
@@ -36,26 +38,23 @@ export function chartLine<Datum extends DataChartPoint, PElement extends BaseTyp
         .layout('grid-area', '1 / 1')
         .attr('opacity', 0);
 
-      const dataPoints = dataSeriesPoint(d);
-      // const pointSeries = drawArea
-      //   .append('g')
-      //   .datum(dataPoints)
-      //   .call((s) => seriesPoint(s))
-      //   .attr('grid-area', '1 / 1 / 2 / 2');
-
-      // Supply comparator for line drawing, just order by x
-      const orderByX = (p1, p2) => {
-        return p1.x > p2.x ? -1 : 1
-      }
-
-      // TODO: Make customizable
-      const lineThickness = 2
-      const lineColor = COLORS_CATEGORICAL[6]
+      const dataPoints = dataSeriesPoint(d)
+      const pointSeries = drawArea
+        .append('g')
+        .datum(dataPoints)
+        .call((s) => seriesPoint(s))
+        .layout('grid-area', '1 / 1');
 
       const pointSeriesLine = drawArea
         .append('g')
         .datum(dataPoints)
-        .call((s) => seriesPointLine(s, lineThickness, lineColor, orderByX))
+        .call((s) => seriesPointLine(s))
+        .layout('grid-area', '1 / 1');
+
+      const pointSeriesLabels = drawArea
+        .append('g')
+        .datum(dataPoints)
+        .call((s) => seriesPointLabels(s))
         .layout('grid-area', '1 / 1');
 
       s.append('g')
@@ -68,23 +67,36 @@ export function chartLine<Datum extends DataChartPoint, PElement extends BaseTyp
         .datum((d) => dataAxis())
         .call((s) => axisBottom(s));
     })
-    .on('datachange.chartline', function (e, chartData) {
-      chartLineDataChange(select<SVGSVGElement, Datum>(this));
+    .on('datachange.chartpointconnected', function (e, chartData) {
+      chartPointConnectedDataChange(select<SVGSVGElement, Datum>(this));
     })
-    .call((s) => chartLineDataChange(s));
+    .call((s) => chartPointConnectedDataChange(s));
 }
 
-export function chartLineDataChange<Datum extends DataChartPoint, PElement extends BaseType, PDatum>(
+export function chartPointConnectedDataChange<Datum extends DataChartPoint, PElement extends BaseType, PDatum>(
   selection: Selection<SVGSVGElement, Datum, PElement, PDatum>
 ): Selection<SVGSVGElement, Datum, PElement, PDatum> {
   return selection.each(function (chartData, i, g) {
     const s = select<SVGSVGElement, Datum>(g[i]);
+
+    s.selectAll<SVGElement, DataSeriesPoint>('.series-point').datum((d) =>
+      Object.assign(d, { creation: chartData })
+    );
+
+    s.selectAll<SVGElement, DataSeriesPoint>('.series-point-labels').datum((d) =>
+      Object.assign(d, { creation: chartData })
+    );
+
+    s.selectAll<SVGElement, DataSeriesPoint>('.series-point-line').datum((d) =>
+      Object.assign(d, { creation: chartData })
+    );
+
     const axisConfig = (selection: Selection<Element, DataAxis>, main: boolean) =>
       selection
         .datum((d) =>
           Object.assign(d, {
             scale: main ? chartData.mainScale : chartData.crossScale,
-            title: main ? chartData.mainTitle : chartData.crossTitle,
+            title: main ? chartData.mainTitle: chartData.crossTitle,
             configureAxis: main ? chartData.configureMainAxis : chartData.configureCrossAxis,
           })
         )

@@ -74,6 +74,7 @@ function computeGridTemplate(elem: SVGSVGElement, n: number) : {
   rows: number
 } {
   const svgWidth = elem.clientWidth;
+  console.log(svgWidth, elem)
   let cols = Math.ceil(Math.sqrt(n));
   if (cols * colWidth > svgWidth) {
     cols = Math.floor(svgWidth / colWidth);
@@ -112,44 +113,40 @@ export function chartBarSmallMultiples<Datum extends DataChartBarSmallMultiples,
 
   return chart(selection)
     .classed('chart-bar-small-multiples', true)
-    .on('render.chartbarsmallmultiples', function (e, chartData) {
-      renderChartBarSmallMultiples(select<SVGSVGElement, Datum>(this));
-    })
     .each((d, i, g) => {
-      const s = select<SVGSVGElement, Datum>(g[i]);
 
       const n = d.gridValues.length
       const gridTemplate = computeGridTemplate(g[i], n);
-      const root = s
-        .select('.root')
-        .attr('grid-template', gridTemplate.template);
+      const s = select<SVGSVGElement, Datum>(g[i])
+      .layout('display', 'grid')
+      .layout('grid-template', gridTemplate.template);
 
       let row = 1;
       let col = 1;
       for (let i = 0; i < n; i++) {
         const gridArea = computeGridArea(row, col);
-        const chartContainer = root
+        const chartContainer = s
         .append('svg')
         .classed('sub-chart', true)
-        .attr('grid-template', '1fr / 1fr')
-        .attr('grid-area', gridArea);
+        .layout('grid-template', '1fr / 1fr')
+        .layout('grid-area', gridArea);
 
         const innerRoot = chartContainer
           .append('g')
           .classed('inner-root', true)
-          .attr('grid-area','1 / 1 / 2 / 2')
-          .attr('grid-template', 'auto 1fr auto / auto 1fr')
-          .attr('margin',20);
+          .layout('grid-area','1 / 1 / 2 / 2')
+          .layout('grid-template', 'auto 1fr auto / auto 1fr')
+          .layout('padding','20px');
 
         const header = innerRoot
           .append('g')
-          .attr('grid-area','1 / 1 / 2 / 3')
-          .attr('grid-template', '1fr / 1fr');
+          .layout('grid-area','1 / 1 / 2 / 3')
+          .layout('grid-template', '1fr / 1fr');
 
         header
           .append('text')
-          .attr('grid-area', '1 / 1 / 2 / 2')
-          .attr('place-self', 'center center')
+          .layout('grid-area', '1 / 1 / 2 / 2')
+          .layout('place-self', 'center center')
           .call((s) => textHorizontalAttrs(s))
           .call((s) => textTitleAttrs(s))
           .text(d.gridValues[i]);
@@ -158,44 +155,44 @@ export function chartBarSmallMultiples<Datum extends DataChartBarSmallMultiples,
           .append('g')
           .datum((d) => dataSeriesBar(d.dataBarCharts[i]))
           .call((s) => seriesBar(s))
-          .attr('grid-area', '2 / 2 / 3 / 3');
+          .layout('grid-area', '2 / 2 / 3 / 3');
 
         innerRoot
           .append('g')
           .datum((d) => dataSeriesLabelBar(dataLabelsBarCreation({ barContainer: barSeries })))
           .call((s) => seriesLabel(s))
-          .attr('grid-area', '2 / 2 / 3 / 3');
+          .layout('grid-area', '2 / 2 / 3 / 3');
 
         const leftAxis = innerRoot
           .append('g')
           .datum((d) => dataAxis({ scale: d.dataBarCharts[i].crossScale }))
           .call((s) => axisLeft(s))
-          .attr('grid-area', '2 / 1 / 3 / 2')
-          .attr('grid-template', '1fr / 1fr')
-          .attr('grid-width', 70);
+          .layout('grid-area', '2 / 1 / 3 / 2')
+          .layout('grid-template', '1fr / 1fr')
+          .layout('grid-width', '70px');
 
         leftAxis
           .append('text')
           .call((s) => textVerticalAttrs(s))
           .call((s) => textTitleAttrs(s))
-          .attr('grid-area', '1 / 1 / 2 / 2')
-          .attr('place-self', 'start start')
+          .layout('grid-area', '1 / 1 / 2 / 2')
+          .layout('place-self', 'start start')
           .text(d.crossTitle);
 
         const bottomAxis = innerRoot
           .append('g')
           .datum((d) => dataAxis({ scale: d.dataBarCharts[i].mainScale }))
           .call((s) => axisBottom(s))
-          .attr('grid-area', '3 / 2 / 4 / 3')
-          .attr('grid-template', '1fr / 1fr')
-          .attr('grid-height', 50);
+          .layout('grid-area', '3 / 2 / 4 / 3')
+          .layout('grid-template', '1fr / 1fr')
+          .layout('grid-height', 50);
 
         bottomAxis
           .append('text')
           .call((s) => textHorizontalAttrs(s))
           .call((s) => textTitleAttrs(s))
-          .attr('grid-area', '1 / 1 / 2 / 2')
-          .attr('place-self', 'end end')
+          .layout('grid-area', '1 / 1 / 2 / 2')
+          .layout('place-self', 'end end')
           .text(d.mainTitle);
 
         col++;
@@ -204,7 +201,11 @@ export function chartBarSmallMultiples<Datum extends DataChartBarSmallMultiples,
           row++;
         }
       }
-    });
+    })
+    .on('datachange.chartbarsmallmultiples', function (e, chartData) {
+      chartBarSmallMultiplesDataChange(select<SVGSVGElement, Datum>(this));
+    })
+    .call((s) => chartBarSmallMultiplesDataChange(s));;
 }
 
 function displayPreviousChart(){
@@ -214,7 +215,7 @@ function displayPreviousChart(){
   let displayedChart = Number(arrowContainer.getAttribute("chart-numer"));
   const noOfCharts = barChartSmallMultiples.querySelectorAll('.sub-chart').length;
   let curChartKey = Infinity;
-  
+
   if(displayedChart === 0){
     curChartKey = noOfCharts-1;
   }
@@ -265,25 +266,25 @@ function updateGrid<Datum extends DataChartBarSmallMultiples>(chartData: DataCha
   const gridTemplate = computeGridTemplate(g[i], n);
   // TODO: debounce
 
-  if(gridTemplate.cols === 1){
-    s.select('.root').attr('grid-template', '1fr / 1fr');
-    const arrowContainer = <HTMLElement>document.body.querySelector(".arrow-container");
-    arrowContainer.removeAttribute('style');
-    if(!arrowContainer.classList.contains('arrow-clicked')){
-      s.selectAll('.sub-chart').each(function(d, j, h){
-        if(j != 0){
-          select(h[j]).style('display', 'none');
-          select(h[j]).style('visibility', 'hidden');
-          select(h[j]).attr('grid-area','1 / 1 / 2 / 2');
-        }
-        else{
-          select(h[j]).attr('grid-area','1 / 1 / 2 / 2');
-        }
-      })
-    }
-  }
-  else{
-    s.selectAll('.root').attr('grid-template', gridTemplate.template);
+  // if(gridTemplate.cols === 1){
+  //   s.layout('grid-template', '1fr / 1fr');
+  //   const arrowContainer = <HTMLElement>document.body.querySelector(".arrow-container");
+  //   arrowContainer.removeAttribute('style');
+  //   if(!arrowContainer.classList.contains('arrow-clicked')){
+  //     s.selectAll('.sub-chart').each(function(d, j, h){
+  //       if(j != 0){
+  //         select(h[j]).style('display', 'none');
+  //         select(h[j]).style('visibility', 'hidden');
+  //         select(h[j]).layout('grid-area','1 / 1 / 2 / 2');
+  //       }
+  //       else{
+  //         select(h[j]).layout('grid-area','1 / 1 / 2 / 2');
+  //       }
+  //     })
+  //   }
+  // }
+  // else{
+    s.layout('grid-template', gridTemplate.template);
     let row = 1;
     let col = 1;
     const arrowContainer = <HTMLElement>document.body.querySelector(".arrow-container");
@@ -291,7 +292,7 @@ function updateGrid<Datum extends DataChartBarSmallMultiples>(chartData: DataCha
     arrowContainer.classList.remove('arrow-clicked');
     s.selectAll('.sub-chart').each(function(d, j, h) {
       const gridArea = computeGridArea(row, col);
-      select(h[j]).attr('grid-area',gridArea);
+      select(h[j]).layout('grid-area',gridArea);
       select(h[j]).style('display', '');
       select(h[j]).style('visibility', '');
       col++;
@@ -300,16 +301,17 @@ function updateGrid<Datum extends DataChartBarSmallMultiples>(chartData: DataCha
         row++;
       }
     })
-  }
+  // }
 }
 
 // const debouncedUpdateGrid = debounce(updateGrid, 100);
 
-export function renderChartBarSmallMultiples<Datum extends DataChartBarSmallMultiples, PElement extends BaseType, PDatum>(
+export function chartBarSmallMultiplesDataChange<Datum extends DataChartBarSmallMultiples, PElement extends BaseType, PDatum>(
   selection: Selection<SVGSVGElement, Datum, PElement, PDatum>
 ): Selection<SVGSVGElement, Datum, PElement, PDatum> {
   return selection.each(function (chartData, i, g) {
     // debouncedUpdateGrid(chartData, i, g);
+
     updateGrid(chartData, i, g);
   });
 }

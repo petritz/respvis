@@ -16,6 +16,7 @@ export interface DataPoint extends Position {
   radius: number;
   index: number;
   key: string;
+  label?: string;
 }
 
 export interface DataSeriesPointCustom extends DataSeries<DataPoint> {}
@@ -36,6 +37,7 @@ export interface DataPointsCreation {
   crossScale: ScaleAny<any, number, number>;
   radiuses: number[] | number;
   keys?: string[];
+  labels?: string[];
 }
 
 export function dataPointsCreation(data?: Partial<DataPointsCreation>): DataPointsCreation {
@@ -46,6 +48,7 @@ export function dataPointsCreation(data?: Partial<DataPointsCreation>): DataPoin
     crossScale: data?.crossScale || scaleLinear().domain([0, 1]),
     radiuses: data?.radiuses || 5,
     keys: data?.keys,
+    labels: data?.labels
   };
 }
 
@@ -77,6 +80,7 @@ export function dataPoints(creationData: DataPointsCreation, bounds: Size): Data
       x: creationData.mainScale(x)!,
       y: creationData.crossScale(y)!,
       radius: r,
+      label: creationData.labels?.[i]
     });
   }
 
@@ -161,6 +165,83 @@ export function seriesPointRender<
   });
 }
 
+export function seriesPointLabels<
+  GElement extends Element,
+  Datum extends DataSeriesPointCustom,
+  PElement extends BaseType,
+  PDatum
+>(
+  selection: Selection<GElement, Datum, PElement, PDatum>
+): Selection<GElement, Datum, PElement, PDatum> {
+  return selection
+    .classed('series-point-labels', true)
+    // .attr('fill', COLORS_CATEGORICAL[0])
+    .on(
+      'render.seriespointlabels-initial',
+      function () {
+        debug(`render on data change on ${nodeToString(this)}`);
+        select(this).on('datachange.seriespointlabels', function () {
+          debug(`data change on ${nodeToString(this)}`);
+          select(this).dispatch('render');
+        });
+      },
+      { once: true }
+    )
+    .on('render.seriespointlabels', function (e, d) {
+      seriesPointLabelsRender(select<GElement, DataSeriesPointCustom>(this));
+    });
+}
+
+export function seriesPointLabelsRender<
+  GElement extends Element,
+  Datum extends DataSeriesPointCustom,
+  PElement extends BaseType,
+  PDatum
+>(
+  selection: Selection<GElement, Datum, PElement, PDatum>
+): Selection<GElement, Datum, PElement, PDatum> {
+  return selection.each((d, i, g) => {
+    const series = select(g[i]);
+    series
+      .selectAll<SVGTextElement, DataPoint>('text')
+      .data(d.data instanceof Function ? d.data(series) : d.data, d.key)
+      .join(
+        (enter) =>
+          enter
+            .append('text')
+            .classed('label', true)
+            .attr('x', (d) => d.x)
+            .attr('y', (d) => d.y - 15)
+            .attr('dominant-baseline','middle')
+            .attr('text-anchor', 'middle')
+            .text((d) => d.label || '')
+            .call((s) => selection.dispatch('textenter', { detail: { selection: s } })),
+        undefined,
+        (exit) =>
+          exit
+            .classed('exiting', true)
+            .call(s =>
+              s
+                .transition('exit')
+                .duration(250)
+                .attr('x', (d) => d.x)
+                .attr('y', (d) => d.y - 15)
+                .remove()
+            )
+            .call((t) => selection.dispatch('textexit', { detail: { transition: t } }))
+      )
+      .call((s) =>
+        s
+          .transition('update')
+          .duration(250)
+          .ease(easeCubicOut)
+          .attr('x', (d) => d.x)
+          .attr('y', (d) => d.y - 15)
+      )
+      .call((s) => selection.dispatch('textupdate', { detail: { selection: s } }));
+  });
+}
+
 export function seriesPointLine<
   GElement extends Element,
   Datum extends DataSeriesPointCustom,
@@ -175,12 +256,23 @@ export function seriesPointLine<
   return selection
     .classed('series-point-line', true)
     // .attr('fill', COLORS_CATEGORICAL[0])
+    .on(
+      'render.seriespointline-initial',
+      function () {
+        debug(`render on data change on ${nodeToString(this)}`);
+        select(this).on('datachange.seriespointline', function () {
+          debug(`data change on ${nodeToString(this)}`);
+          select(this).dispatch('render');
+        });
+      },
+      { once: true }
+    )
     .on('render.seriespointline', function (e, d) {
-      renderSeriesPointLine(select<GElement, DataSeriesPointCustom>(this), lineThickness, lineColor, orderComparator);
+      seriesPointLineRender(select<GElement, DataSeriesPointCustom>(this), lineThickness, lineColor, orderComparator);
     });
 }
 
-export function renderSeriesPointLine<
+export function seriesPointLineRender<
   GElement extends Element,
   Datum extends DataSeriesPointCustom,
   PElement extends BaseType,
@@ -194,7 +286,8 @@ export function renderSeriesPointLine<
   return selection.each((d, i, g) => {
     const series = select(g[i]);
     // remove old polyline
-    series.selectAll('polyline').remove()
+
+    // series.selectAll('polyline').remove()
 
     const data = d.data instanceof Function ? d.data(series) : d.data;
 
@@ -205,10 +298,36 @@ export function renderSeriesPointLine<
     const points = data.map((point) => {
       return point.x + ',' + point.y
     }).join(' ')
-    series.append('polyline')
-    .attr('points', points)
-    .attr('stroke', lineColor)
-    .attr('fill', 'none')
-    .attr('stroke-width', lineThickness);
+
+    series.selectAll<SVGPolylineElement, String>('polyline')
+    .data([points])
+    .join(
+      (enter) =>
+       enter
+        .append('polyline')
+        .classed('line', true)
+        .attr('points', (d) => d)
+        .attr('stroke', lineColor)
+        .attr('fill', 'none')
+        .attr('stroke-width', lineThickness),
+      undefined,
+      (exit) =>
+        exit
+          .classed('exiting', true)
+          .call((s) =>
+            s
+              .transition('exit')
+              .duration(250)
+              .attr('points', (d) => d)
+              .remove()
+          )
+    )
+    .call((s) =>
+      s
+        .transition('update')
+        .duration(250)
+        .ease(easeCubicOut)
+        .attr('points', (d) => d)
+    )
   });
 }
