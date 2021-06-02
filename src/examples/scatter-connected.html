@@ -28,7 +28,7 @@
         minArea = Math.min(...areas),
         maxArea = Math.max(...areas),
         areaSpan = maxArea - minArea,
-        areaDomain = [0, maxArea + areaSpan * 0.2],
+        areaDomain = [minArea-50, maxArea + areaSpan * 0.2],
         areaFormatter = (area) => `${area}ft²`,
         areaScale = d3.scaleLinear().domain(areaDomain),
         areaAxisTitle = 'Area';
