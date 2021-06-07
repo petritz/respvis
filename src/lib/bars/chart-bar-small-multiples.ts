@@ -73,10 +73,10 @@ function computeGridTemplate(elem: SVGSVGElement, n: number) : {
   cols: number,
   rows: number
 } {
-  const svgWidth = elem.clientWidth;
+  const containerWidth = elem.parentElement!.clientWidth;
   let cols = Math.ceil(Math.sqrt(n));
-  if (cols * colWidth > svgWidth) {
-    cols = Math.floor(svgWidth / colWidth);
+  if (cols * colWidth > containerWidth) {
+    cols = Math.floor(containerWidth / colWidth);
   }
 
   const rows = Math.floor(n / cols);
@@ -95,10 +95,6 @@ function computeGridTemplate(elem: SVGSVGElement, n: number) : {
   }
 
   return result
-}
-
-function computeGridArea(row: number, col: number) {
-  return `${row} / ${col} / ${row + 1} / ${col + 1}`
 }
 
 export function chartBarSmallMultiples<Datum extends DataChartBarSmallMultiples, PElement extends BaseType, PDatum>(
@@ -120,85 +116,55 @@ export function chartBarSmallMultiples<Datum extends DataChartBarSmallMultiples,
       .layout('display', 'grid')
       .layout('grid-template', gridTemplate.template);
 
-      let row = 1;
-      let col = 1;
       for (let i = 0; i < n; i++) {
-        const gridArea = computeGridArea(row, col);
         const chartContainer = s
         .append('svg')
         .classed('sub-chart', true)
-        .layout('grid-template', '1fr / 1fr')
-        .layout('grid-area', gridArea);
+        .layout('display', 'grid')
+        .layout('grid-template', 'auto 1fr auto / auto 1fr')
+        .layout('padding','20px');
 
-        const innerRoot = chartContainer
-          .append('g')
-          .classed('inner-root', true)
-          .layout('grid-area','1 / 1 / 2 / 2')
-          .layout('grid-template', 'auto 1fr auto / auto 1fr')
-          .layout('padding','20px');
+        const drawArea = chartContainer
+          .append('svg')
+          .classed('draw-area', true)
+          .attr('overflow', 'visible')
+          .layout('grid-area','2 / 2 / 3 / 3')
+          .layout('display','grid');
 
-        const header = innerRoot
+        const header = chartContainer
           .append('g')
           .layout('grid-area','1 / 1 / 2 / 3')
-          .layout('grid-template', '1fr / 1fr');
+          .layout('display', 'flex')
+          .layout('justify-content','center');
 
         header
           .append('text')
-          .layout('grid-area', '1 / 1 / 2 / 2')
-          .layout('place-self', 'center center')
           .call((s) => textHorizontalAttrs(s))
           .call((s) => textTitleAttrs(s))
           .text(d.gridValues[i]);
 
-        const barSeries = innerRoot
+        const barSeries = drawArea
           .append('g')
+          .layout('grid-area', '1 / 1')
           .datum((d) => dataSeriesBar(d.dataBarCharts[i]))
-          .call((s) => seriesBar(s))
-          .layout('grid-area', '2 / 2 / 3 / 3');
+          .call((s) => seriesBar(s));
 
-        innerRoot
+        drawArea
           .append('g')
           .datum((d) => dataSeriesLabelBar(dataLabelsBarCreation({ barContainer: barSeries })))
           .call((s) => seriesLabel(s))
-          .layout('grid-area', '2 / 2 / 3 / 3');
+          .layout('grid-area', '1 / 1');
 
-        const leftAxis = innerRoot
+        chartContainer
           .append('g')
           .datum((d) => dataAxis({ scale: d.dataBarCharts[i].crossScale }))
           .call((s) => axisLeft(s))
-          .layout('grid-area', '2 / 1 / 3 / 2')
-          .layout('grid-template', '1fr / 1fr')
-          .layout('grid-width', '70px');
+          .layout('grid-area', '2 / 1 / 3 / 2');
 
-        leftAxis
-          .append('text')
-          .call((s) => textVerticalAttrs(s))
-          .call((s) => textTitleAttrs(s))
-          .layout('grid-area', '1 / 1 / 2 / 2')
-          .layout('place-self', 'start start')
-          .text(d.crossTitle);
-
-        const bottomAxis = innerRoot
-          .append('g')
+        chartContainer.append('g')
           .datum((d) => dataAxis({ scale: d.dataBarCharts[i].mainScale }))
           .call((s) => axisBottom(s))
-          .layout('grid-area', '3 / 2 / 4 / 3')
-          .layout('grid-template', '1fr / 1fr')
-          .layout('grid-height', 50);
-
-        bottomAxis
-          .append('text')
-          .call((s) => textHorizontalAttrs(s))
-          .call((s) => textTitleAttrs(s))
-          .layout('grid-area', '1 / 1 / 2 / 2')
-          .layout('place-self', 'end end')
-          .text(d.mainTitle);
-
-        col++;
-        if (col > gridTemplate.cols) {
-          col = 1;
-          row++;
-        }
+          .layout('grid-area', '3 / 2 / 4 / 3');
       }
     })
     .on('datachange.chartbarsmallmultiples', function (e, chartData) {
@@ -284,22 +250,13 @@ function updateGrid<Datum extends DataChartBarSmallMultiples>(chartData: DataCha
   // }
   // else{
     s.layout('grid-template', gridTemplate.template);
-    let row = 1;
-    let col = 1;
     const arrowContainer = <HTMLElement>document.body.querySelector(".arrow-container");
     arrowContainer.setAttribute('style', 'display:none;');
     arrowContainer.classList.remove('arrow-clicked');
-    s.selectAll('.sub-chart').each(function(d, j, h) {
-      const gridArea = computeGridArea(row, col);
-      select(h[j]).layout('grid-area',gridArea);
-      select(h[j]).style('display', '');
-      select(h[j]).style('visibility', '');
-      col++;
-      if (col > gridTemplate.cols) {
-        col = 1;
-        row++;
-      }
-    })
+    // s.selectAll('.sub-chart').each(function(d, j, h) {
+    //   select(h[j]).style('display', '');
+    //   select(h[j]).style('visibility', '');
+    // })
   // }
 }
 
