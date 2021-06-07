@@ -23,8 +23,8 @@ export interface DataChartBarSmallMultiples{
   crossTitle: string;
   mainValues: any[];
   crossValues: number[][];
-  // mainScale: ScaleBand<any>;
-  // crossScale: ScaleContinuousNumeric<number, number>;
+  mainScale: ScaleBand<any>;
+  crossScale: ScaleContinuousNumeric<number, number>;
   configureMainAxis: ConfigureAxisFn;
   configureCrossAxis: ConfigureAxisFn;
   gridValues: any[];
@@ -63,7 +63,9 @@ export function dataChartBarSmallMultiples(data?: Partial<DataChartBarSmallMulti
     mainValues,
     crossValues,
     gridValues,
-    dataBarCharts
+    dataBarCharts,
+    mainScale,
+    crossScale
   };
 }
 
@@ -157,12 +159,13 @@ export function chartBarSmallMultiples<Datum extends DataChartBarSmallMultiples,
 
         chartContainer
           .append('g')
-          .datum((d) => dataAxis({ scale: d.dataBarCharts[i].crossScale }))
+          .datum((d) => dataAxis())
           .call((s) => axisLeft(s))
           .layout('grid-area', '2 / 1 / 3 / 2');
 
-        chartContainer.append('g')
-          .datum((d) => dataAxis({ scale: d.dataBarCharts[i].mainScale }))
+        chartContainer
+          .append('g')
+          .datum((d) => dataAxis())
           .call((s) => axisBottom(s))
           .layout('grid-area', '3 / 2 / 4 / 3');
       }
@@ -258,6 +261,21 @@ function updateGrid<Datum extends DataChartBarSmallMultiples>(chartData: DataCha
     //   select(h[j]).style('visibility', '');
     // })
   // }
+
+  const axisConfig = (selection: Selection<Element, DataAxis>, main: boolean) =>
+      selection.datum((d) =>
+        Object.assign(d, {
+          scale: main ? chartData.mainScale : chartData.crossScale,
+          title: main ? chartData.mainTitle : chartData.crossTitle,
+          configureAxis: main ? chartData.configureMainAxis : chartData.configureCrossAxis,
+        })
+      )
+      .classed('axis-main', main)
+      .classed('axis-cross', !main);
+
+
+  s.selectAll<SVGGElement, DataAxis>('.axis-left').call((s) => axisConfig(s, false));
+  s.selectAll<SVGGElement, DataAxis>('.axis-bottom').call((s) => axisConfig(s, true));
 }
 
 // const debouncedUpdateGrid = debounce(updateGrid, 100);
