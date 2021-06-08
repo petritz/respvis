@@ -109,12 +109,6 @@ function computeGridTemplate(elem: SVGSVGElement, n: number) : {
 export function chartBarSmallMultiples<Datum extends DataChartBarSmallMultiples, PElement extends BaseType, PDatum>(
   selection: Selection<SVGSVGElement, Datum, PElement, PDatum>
 ): Selection<SVGSVGElement, Datum, PElement, PDatum> {
-  const arrowLeft = <HTMLElement>document.body.querySelector(".arrow-left");
-  arrowLeft.addEventListener('click', displayPreviousChart);
-
-  const arrowRight = <HTMLElement>document.body.querySelector(".arrow-right");
-  arrowRight.addEventListener('click', displayNextChart);
-
   return chart(selection)
     .classed('chart-bar-small-multiples', true)
     .each((d, i, g) => {
@@ -185,91 +179,12 @@ export function chartBarSmallMultiples<Datum extends DataChartBarSmallMultiples,
     .call((s) => chartBarSmallMultiplesDataChange(s));;
 }
 
-function displayPreviousChart(){
-  const barChartSmallMultiples = <HTMLElement>document.body.querySelector(".root");
-  const arrowContainer = <HTMLElement>document.body.querySelector(".arrow-container");
-  arrowContainer.classList.add('arrow-clicked');
-  let displayedChart = Number(arrowContainer.getAttribute("chart-numer"));
-  const noOfCharts = barChartSmallMultiples.querySelectorAll('.sub-chart').length;
-  let curChartKey = Infinity;
-
-  if(displayedChart === 0){
-    curChartKey = noOfCharts-1;
-  }
-  else{
-    curChartKey = displayedChart-1;
-  }
-  arrowContainer.setAttribute('chart-numer', String(curChartKey));
-  barChartSmallMultiples.querySelectorAll('.sub-chart').forEach(function(value, key){
-    if(curChartKey === key){
-      value.removeAttribute('style');
-      value.setAttribute('grid-area','1 / 1 / 2 / 2');
-    }
-    else{
-      value.setAttribute('style', 'display:none;visibility:hidden;');
-    }
-  })
-}
-
-function displayNextChart(){
-  const barChartSmallMultiples = <HTMLElement>document.body.querySelector(".root");
-  const arrowContainer = <HTMLElement>document.body.querySelector(".arrow-container");
-  arrowContainer.classList.add('arrow-clicked');
-  let displayedChart = Number(arrowContainer.getAttribute("chart-numer"));
-  const noOfCharts = barChartSmallMultiples.querySelectorAll('.sub-chart').length;
-  let curChartKey = Infinity;
-
-  if(noOfCharts-1 === displayedChart){
-    curChartKey = 0;
-  }
-  else{
-    curChartKey = displayedChart+1;
-  }
-  arrowContainer.setAttribute('chart-numer', String(curChartKey));
-  barChartSmallMultiples.querySelectorAll('.sub-chart').forEach(function(value, key){
-    if(curChartKey === key){
-      value.removeAttribute('style');
-      value.setAttribute('grid-area','1 / 1 / 2 / 2');
-    }
-    else{
-      value.setAttribute('style', 'display:none;visibility:hidden;');
-    }
-  })
-}
-
 function updateGrid<Datum extends DataChartBarSmallMultiples>(chartData: DataChartBarSmallMultiples, i: number, g: SVGSVGElement[] | ArrayLike<SVGSVGElement>) {
   const s = select<SVGSVGElement, Datum>(g[i]);
   const n = chartData.gridValues.length
   const gridTemplate = computeGridTemplate(g[i], n);
   // TODO: debounce
-
-  // if(gridTemplate.cols === 1){
-  //   s.layout('grid-template', '1fr / 1fr');
-  //   const arrowContainer = <HTMLElement>document.body.querySelector(".arrow-container");
-  //   arrowContainer.removeAttribute('style');
-  //   if(!arrowContainer.classList.contains('arrow-clicked')){
-  //     s.selectAll('.sub-chart').each(function(d, j, h){
-  //       if(j != 0){
-  //         select(h[j]).style('display', 'none');
-  //         select(h[j]).style('visibility', 'hidden');
-  //         select(h[j]).layout('grid-area','1 / 1 / 2 / 2');
-  //       }
-  //       else{
-  //         select(h[j]).layout('grid-area','1 / 1 / 2 / 2');
-  //       }
-  //     })
-  //   }
-  // }
-  // else{
-    s.layout('grid-template', gridTemplate.template);
-    const arrowContainer = <HTMLElement>document.body.querySelector(".arrow-container");
-    arrowContainer.setAttribute('style', 'display:none;');
-    arrowContainer.classList.remove('arrow-clicked');
-    // s.selectAll('.sub-chart').each(function(d, j, h) {
-    //   select(h[j]).style('display', '');
-    //   select(h[j]).style('visibility', '');
-    // })
-  // }
+  s.layout('grid-template', gridTemplate.template);
 
   const axisConfig = (selection: Selection<Element, DataAxis>, main: boolean) =>
       selection.datum((d) =>
@@ -294,7 +209,6 @@ export function chartBarSmallMultiplesDataChange<Datum extends DataChartBarSmall
 ): Selection<SVGSVGElement, Datum, PElement, PDatum> {
   return selection.each(function (chartData, i, g) {
     // debouncedUpdateGrid(chartData, i, g);
-    console.log(g, i)
     updateGrid(chartData, i, g);
   });
 }

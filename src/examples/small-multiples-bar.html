@@ -15,40 +15,13 @@
         min-height: 25rem;
       }
 
-      .arrow {
-        display: inline-block;
-        width: 0;
-        height: 0;
-        border-top: 25px solid transparent;
-        border-bottom: 25px solid transparent;
-        margin: 5px;
-      }
-
-      .arrow-right {
-        border-left: 25px solid #000;
-        right: 0;
-      }
-
-      .arrow-left {
-        border-right: 25px solid #000;
-        left: 0;
-      }
-
       .container {
         font-size: 24px;
-      }
-
-      .arrow-container {
-        text-align: end;
       }
     </style>
   </head>
   <body>
     <h1>Small Multiples Bar Chart</h1>
-    <div class="arrow-container" chart-numer="0">
-      <a class="arrow arrow-left" role="button"></a>
-      <a class="arrow arrow-right" role="button"></a>
-    </div>
     <div id="chart">
     </div>
     <script src="./vendor/d3.v6.js"></script>
