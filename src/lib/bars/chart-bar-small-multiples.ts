@@ -1,7 +1,14 @@
 import { BaseType, select, Selection } from 'd3-selection';
 import { ScaleBand, ScaleContinuousNumeric, scaleBand, scaleLinear } from 'd3-scale';
 import { axisBottom, axisLeft, ConfigureAxisFn, dataAxis, DataAxis } from '../axis';
-import { chart, textHorizontalAttrs, textTitleAttrs, textVerticalAttrs } from '../core';
+import {
+  chart,
+  debug,
+  nodeToString,
+  textHorizontalAttrs,
+  textTitleAttrs,
+  textVerticalAttrs
+} from '../core';
 import {
   chartBar,
   DataChartBar,
@@ -116,7 +123,8 @@ export function chartBarSmallMultiples<Datum extends DataChartBarSmallMultiples,
       const gridTemplate = computeGridTemplate(g[i], n);
       const s = select<SVGSVGElement, Datum>(g[i])
       .layout('display', 'grid')
-      .layout('grid-template', gridTemplate.template);
+      .layout('grid-template', gridTemplate.template)
+      .attr('overflow','visible');
 
       for (let i = 0; i < n; i++) {
         const chartContainer = s
@@ -171,6 +179,7 @@ export function chartBarSmallMultiples<Datum extends DataChartBarSmallMultiples,
       }
     })
     .on('datachange.chartbarsmallmultiples', function (e, chartData) {
+      debug(`data change on ${nodeToString(this)}`);
       chartBarSmallMultiplesDataChange(select<SVGSVGElement, Datum>(this));
     })
     .call((s) => chartBarSmallMultiplesDataChange(s));;
@@ -285,7 +294,7 @@ export function chartBarSmallMultiplesDataChange<Datum extends DataChartBarSmall
 ): Selection<SVGSVGElement, Datum, PElement, PDatum> {
   return selection.each(function (chartData, i, g) {
     // debouncedUpdateGrid(chartData, i, g);
-
+    console.log(g, i)
     updateGrid(chartData, i, g);
   });
 }

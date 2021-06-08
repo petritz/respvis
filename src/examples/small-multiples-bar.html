@@ -70,6 +70,12 @@
         gridValues: outerData
       })
       const chart = layouter.append('svg').datum(chartDatum).call(respVis.chartBarSmallMultiples)
+      window.addEventListener('resize', configure);
+      configure();
+
+      function configure() {
+        chart.datum(chartDatum);
+      }
     </script>
   </body>
 </html>
