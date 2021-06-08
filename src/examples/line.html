@@ -45,14 +45,14 @@
 
       const root = d3.select('#chart'),
         layouter = root.append('div').call(respVis.layouter),
-        chartDatum = respVis.dataChartPoint({
+        chartDatum = respVis.dataChartLine({
           mainValues: year,
           mainTitle: yearAxisTitle,
           mainScale: yearScale,
           configureMainAxis: (a) => a.ticks(window.matchMedia(wideMediaQuery).matches ? 10 : 5),
           crossValues: runs,
           crossTitle: runAxisTitle,
-          crossScale: runScale,
+          crossScale: runScale
         }),
         chart = layouter.append('svg').datum(chartDatum).call(respVis.chartLine)
 

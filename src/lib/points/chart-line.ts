@@ -2,6 +2,7 @@ import { BaseType, select, Selection } from 'd3-selection';
 import { axisBottom, axisLeft, ConfigureAxisFn, DataAxis, dataAxis } from '../axis';
 import {chart, COLORS_CATEGORICAL, textHorizontalAttrs, textTitleAttrs, textVerticalAttrs} from '../core';
 import {
+  dataChartPoint,
   DataChartPoint
 } from './chart-point';
 import {
@@ -12,8 +13,18 @@ import {
   seriesPointLine,
 } from './series-point';
 
+export interface DataChartLine extends DataChartPoint {
+  drawPoints: Boolean;
+}
 
-export function chartLine<Datum extends DataChartPoint, PElement extends BaseType, PDatum>(
+export function dataChartLine(data?: Partial<DataChartLine>): DataChartLine {
+  return {
+    ...dataChartPoint(data),
+    drawPoints: data?.drawPoints !== undefined ? data!.drawPoints : true
+  }
+}
+
+export function chartLine<Datum extends DataChartLine, PElement extends BaseType, PDatum>(
   selection: Selection<SVGSVGElement, Datum, PElement, PDatum>
 ): Selection<SVGSVGElement, Datum, PElement, PDatum> {
   return chart(selection)
@@ -37,12 +48,6 @@ export function chartLine<Datum extends DataChartPoint, PElement extends BaseTyp
         .attr('opacity', 0);
 
       const dataPoints = dataSeriesPoint(d);
-      // const pointSeries = drawArea
-      //   .append('g')
-      //   .datum(dataPoints)
-      //   .call((s) => seriesPoint(s))
-      //   .attr('grid-area', '1 / 1 / 2 / 2');
-
       // Supply comparator for line drawing, just order by x
       const orderByX = (p1, p2) => {
         return p1.x > p2.x ? -1 : 1
@@ -57,6 +62,14 @@ export function chartLine<Datum extends DataChartPoint, PElement extends BaseTyp
         .datum(dataPoints)
         .call((s) => seriesPointLine(s, lineThickness, lineColor, orderByX))
         .layout('grid-area', '1 / 1');
+
+      if (d.drawPoints) {
+        drawArea
+          .append('g')
+          .datum(dataPoints)
+          .call((s) => seriesPoint(s))
+          .layout('grid-area', '1 / 1');
+      }
 
       s.append('g')
         .layout('grid-area', '1 / 1')
@@ -74,7 +87,7 @@ export function chartLine<Datum extends DataChartPoint, PElement extends BaseTyp
     .call((s) => chartLineDataChange(s));
 }
 
-export function chartLineDataChange<Datum extends DataChartPoint, PElement extends BaseType, PDatum>(
+export function chartLineDataChange<Datum extends DataChartLine, PElement extends BaseType, PDatum>(
   selection: Selection<SVGSVGElement, Datum, PElement, PDatum>
 ): Selection<SVGSVGElement, Datum, PElement, PDatum> {
   return selection.each(function (chartData, i, g) {
