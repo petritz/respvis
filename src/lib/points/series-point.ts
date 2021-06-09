@@ -1,3 +1,4 @@
+import { bezier } from 'chroma-js';
 import { easeCubicOut } from 'd3-ease';
 import { scaleLinear } from 'd3-scale';
 import { BaseType, select, Selection } from 'd3-selection';
@@ -175,7 +176,6 @@ export function seriesPointLabels<
 ): Selection<GElement, Datum, PElement, PDatum> {
   return selection
     .classed('series-point-labels', true)
-    // .attr('fill', COLORS_CATEGORICAL[0])
     .on(
       'render.seriespointlabels-initial',
       function () {
@@ -251,11 +251,11 @@ export function seriesPointLine<
   selection: Selection<GElement, Datum, PElement, PDatum>,
   lineThickness: number = 1,
   lineColor: string = "black",
+  lineType: PathType = 'line',
   orderComparator?: (a: any, b: any) => number
 ): Selection<GElement, Datum, PElement, PDatum> {
   return selection
     .classed('series-point-line', true)
-    // .attr('fill', COLORS_CATEGORICAL[0])
     .on(
       'render.seriespointline-initial',
       function () {
@@ -268,8 +268,69 @@ export function seriesPointLine<
       { once: true }
     )
     .on('render.seriespointline', function (e, d) {
-      seriesPointLineRender(select<GElement, DataSeriesPointCustom>(this), lineThickness, lineColor, orderComparator);
+      seriesPointLineRender(select<GElement, DataSeriesPointCustom>(this), lineThickness, lineColor, lineType, orderComparator);
     });
+}
+
+function lineCommand (point: DataPoint) {
+  return `L ${point.x},${point.y}`;
+}
+
+function bezierTangent (a: DataPoint, b: DataPoint) : { length: number, angle: number }  {
+  const diffX = b.x - a.x;
+  const diffY = b.y - a.y;
+  return {
+    length: Math.sqrt(Math.pow(diffX, 2) + Math.pow(diffY,2)),
+    angle: Math.atan2(diffY, diffX)
+  }
+}
+
+function bezierControlPoint (current: DataPoint, previous: DataPoint|undefined, next: DataPoint|undefined, reverse?: Boolean) : {x:number, y:number} {
+  const p = previous || current;
+  const n = next || current;
+  const tangent =  bezierTangent(p, n);
+  const smoothing = 0.15;
+  const angle = tangent.angle + (reverse ? Math.PI : 0);
+  const length = tangent.length * smoothing;
+  const x = current.x + Math.cos(angle) * length;
+  const y = current.y + Math.sin(angle) * length;
+  return {x, y};
+}
+
+function bezierCommand (point: DataPoint, i: number, a: DataPoint[]): string {
+  const cps = bezierControlPoint(a[i - 1], a[i - 2], point);
+  const cpe = bezierControlPoint(point, a[i - 1], a[i + 1], true);
+  return `C ${cps.x},${cps.y} ${cpe.x},${cpe.y} ${point.x},${point.y}`;
+}
+
+export type PathType = 'line'|'smooth';
+
+function deduceCommand(type: PathType) {
+  switch(type) {
+    case 'smooth':
+      return bezierCommand;
+    case 'line':
+    default:
+      return lineCommand;
+  }
+}
+
+/**
+ * adepted from example at
+ * https://francoisromain.medium.com/smooth-a-svg-path-with-cubic-bezier-curves-e37b49d46c74
+ *
+ * @param points
+ */
+function makePath (points : DataPoint[], type: PathType = 'line' ) : string {
+  const d = points.map((point: DataPoint, i: number, a: DataPoint[] ) => {
+    if (i === 0) {
+      return `M ${point.x},${point.y}`;
+    } else {
+      return deduceCommand(type)(point, i, a);
+    }
+  }).join(' ');
+
+  return d;
 }
 
 export function seriesPointLineRender<
@@ -281,32 +342,27 @@ export function seriesPointLineRender<
   selection: Selection<GElement, Datum, PElement, PDatum>,
   lineThickness: number = 1,
   lineColor: string = "black",
+  lineType: PathType = "line",
   orderComparator?: (a: any, b: any) => number
 ): Selection<GElement, Datum, PElement, PDatum> {
   return selection.each((d, i, g) => {
     const series = select(g[i]);
-    // remove old polyline
-
-    // series.selectAll('polyline').remove()
-
     const data = d.data instanceof Function ? d.data(series) : d.data;
 
     if(orderComparator != null) {
       data.sort(orderComparator)
     }
 
-    const points = data.map((point) => {
-      return point.x + ',' + point.y
-    }).join(' ')
+    const path = makePath(data, lineType);
 
-    series.selectAll<SVGPolylineElement, String>('polyline')
-    .data([points])
+    series.selectAll<SVGPolylineElement, String>('path')
+    .data([path])
     .join(
       (enter) =>
        enter
-        .append('polyline')
+        .append('path')
         .classed('line', true)
-        .attr('points', (d) => d)
+        .attr('d', (d) => d)
         .attr('stroke', lineColor)
         .attr('fill', 'none')
         .attr('stroke-width', lineThickness),
@@ -318,7 +374,7 @@ export function seriesPointLineRender<
             s
               .transition('exit')
               .duration(250)
-              .attr('points', (d) => d)
+              .attr('d', (d) => d)
               .remove()
           )
     )
@@ -327,7 +383,7 @@ export function seriesPointLineRender<
         .transition('update')
         .duration(250)
         .ease(easeCubicOut)
-        .attr('points', (d) => d)
+        .attr('d', (d) => d)
     )
   });
 }

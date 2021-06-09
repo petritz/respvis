@@ -11,16 +11,23 @@ import {
   dataSeriesPoint,
   seriesPoint,
   seriesPointLine,
+  PathType
 } from './series-point';
 
 export interface DataChartLine extends DataChartPoint {
   drawPoints: Boolean;
+  lineColor: string;
+  lineThickness: number;
+  lineType: PathType;
 }
 
 export function dataChartLine(data?: Partial<DataChartLine>): DataChartLine {
   return {
     ...dataChartPoint(data),
-    drawPoints: data?.drawPoints !== undefined ? data!.drawPoints : true
+    drawPoints: data?.drawPoints !== undefined ? data!.drawPoints : true,
+    lineThickness: data?.lineThickness !== undefined ? data!.lineThickness : 2,
+    lineColor: data?.lineColor || COLORS_CATEGORICAL[6],
+    lineType: data?.lineType || 'line'
   }
 }
 
@@ -53,14 +60,10 @@ export function chartLine<Datum extends DataChartLine, PElement extends BaseType
         return p1.x > p2.x ? -1 : 1
       }
 
-      // TODO: Make customizable
-      const lineThickness = 2
-      const lineColor = COLORS_CATEGORICAL[6]
-
       const pointSeriesLine = drawArea
         .append('g')
         .datum(dataPoints)
-        .call((s) => seriesPointLine(s, lineThickness, lineColor, orderByX))
+        .call((s) => seriesPointLine(s, d.lineThickness, d.lineColor, d.lineType, orderByX))
         .layout('grid-area', '1 / 1');
 
       if (d.drawPoints) {

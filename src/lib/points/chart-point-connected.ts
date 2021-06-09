@@ -39,16 +39,16 @@ export function chartPointConnected<Datum extends DataChartPoint, PElement exten
         .attr('opacity', 0);
 
       const dataPoints = dataSeriesPoint(d)
+      const pointSeriesLine = drawArea
+        .append('g')
+        .datum(dataPoints)
+        .call((s) => seriesPointLine(s, 2, 'red', 'smooth'))
+        .layout('grid-area', '1 / 1');
+
       const pointSeries = drawArea
         .append('g')
         .datum(dataPoints)
         .call((s) => seriesPoint(s))
-        .layout('grid-area', '1 / 1');
-
-      const pointSeriesLine = drawArea
-        .append('g')
-        .datum(dataPoints)
-        .call((s) => seriesPointLine(s))
         .layout('grid-area', '1 / 1');
 
       const pointSeriesLabels = drawArea
