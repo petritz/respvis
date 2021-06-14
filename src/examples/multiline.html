@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+  <head>
+    <title>RespVis - Multiline</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8" />
+    <style>
+      #chart {
+        width: 100%;
+        height: 80vh;
+        min-height: 25rem;
+      }
+
+      body {
+        background-color: floralwhite;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Multiline Chart</h1>
+    <div id="chart"></div>
+    <script src="./vendor/d3.v6.js"></script>
+    <script src="../respvis.js"></script>
+    <script type="module">
+      import data from './data/data-multi-line.js';
+
+      const wideMediaQuery = 'screen and (min-width: 40rem)';
+
+      const root = d3.select('#chart'),
+        layouter = root.append('div').call(respVis.layouter),
+        chartDatum = respVis.dataChartMultiLine({
+          mainTitle: 'Main Axis',
+          crossTitle: 'Cross Axis',
+          datasets: data.datasets
+        }),
+        chart = layouter.append('svg').datum(chartDatum).call(respVis.chartMultiLine)
+
+      window.addEventListener('resize', configure);
+      configure();
+
+      function configure() {
+        if (window.matchMedia(wideMediaQuery).matches) {
+        }
+      }
+    </script>
+  </body>
+</html>
