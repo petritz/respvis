@@ -94,7 +94,8 @@ export function seriesPoint<
   PElement extends BaseType,
   PDatum
 >(
-  selection: Selection<GElement, Datum, PElement, PDatum>
+  selection: Selection<GElement, Datum, PElement, PDatum>,
+  pointColor: string = "black"
 ): Selection<GElement, Datum, PElement, PDatum> {
   return selection
     .classed('series-point', true)
@@ -111,7 +112,7 @@ export function seriesPoint<
       { once: true }
     )
     .on('render.seriespoint', function (e, d) {
-      seriesPointRender(select<GElement, DataSeriesPointCustom>(this));
+      seriesPointRender(select<GElement, DataSeriesPointCustom>(this), pointColor);
     });
 }
 
@@ -121,7 +122,8 @@ export function seriesPointRender<
   PElement extends BaseType,
   PDatum
 >(
-  selection: Selection<GElement, Datum, PElement, PDatum>
+  selection: Selection<GElement, Datum, PElement, PDatum>,
+  pointColor: string = "black"
 ): Selection<GElement, Datum, PElement, PDatum> {
   return selection.each((d, i, g) => {
     debug(`render point series on ${nodeToString(g[i])}`);
@@ -161,6 +163,7 @@ export function seriesPointRender<
           .attr('cx', (d) => d.x)
           .attr('cy', (d) => d.y)
           .attr('r', (d) => d.radius)
+          .attr('fill', pointColor)
       )
       .call((s) => selection.dispatch('pointupdate', { detail: { selection: s } }));
   });
