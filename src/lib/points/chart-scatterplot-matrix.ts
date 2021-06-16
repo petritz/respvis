@@ -21,8 +21,13 @@ import {
   seriesPoint,
 } from './series-point';
 
+
+export interface DataChartPointMatrixEntry {
+  title: string;
+  dataset?: DataChartPoint;
+}
 export interface DataChartPointMatrix {
-  dataPointCharts: DataChartPoint[],
+  dataPointCharts: DataChartPointMatrixEntry[][],
 }
 
 export interface MatrixDataset {
@@ -32,33 +37,46 @@ export interface MatrixDataset {
 
 export interface DataChartPointMatrixInput {
   datasets: MatrixDataset[];
+  radius: number;
 }
 
 export function dataChartPointMatrix(data?: Partial<DataChartPointMatrixInput>): DataChartPointMatrix {
-  const radius = 5;
+  const radius = data?.radius || 5;
 
-  const dataPointCharts: DataChartPoint[] = [];
+  const dataPointCharts: DataChartPointMatrixEntry[][] = [];
   const datasets = data?.datasets || [];
   for (let i = 0; i < datasets.length; i++) {
     const mainValues = datasets[i].values;
-    const mainScale = scaleLinear().domain([Math.min(...mainValues), Math.max(...mainValues)]).nice();
-    for (let j=0; j < datasets.length; j++) {
-      const crossValues = datasets[j].values;
-      const crossScale = scaleLinear().domain([Math.min(...crossValues), Math.max(...crossValues)]).nice();
-      dataPointCharts.push(dataChartPoint({
-        mainValues: datasets[i].values,
-        mainScale: mainScale,
-        crossValues: datasets[j].values,
-        crossScale: crossScale,
-        radiuses: radius,
-        mainTitle: datasets[i].title,
-        crossTitle: datasets[j].title
-      }));
+    const mainMin = Math.min(...mainValues);
+    const mainMax = Math.max(...mainValues);
+    const mainPadding = (mainMax - mainMin) * 0.05;
+    const mainScale = scaleLinear().domain([mainMin - mainPadding, mainMax + mainPadding]).nice();
+    dataPointCharts.push([]);
+    for (let j = 0; j < datasets.length; j++) {
+      if (i === j) {
+        dataPointCharts[i][j] = { title: datasets[i].title };
+      } else {
+        const crossValues = datasets[j].values;
+        const crossMin = Math.min(...crossValues);
+        const crossMax = Math.max(...crossValues);
+        const crossPadding = (crossMax - crossMin) * 0.05;
+        const crossScale = scaleLinear().domain([crossMin - crossPadding, crossMax + crossPadding]).nice();
 
+        dataPointCharts[i][j] = {
+          title: datasets[j].title,
+          dataset: dataChartPoint({
+            mainValues: datasets[i].values,
+            mainScale: mainScale,
+            crossValues: datasets[j].values,
+            crossScale: crossScale,
+            radiuses: radius,
+            mainTitle: datasets[i].title,
+            crossTitle: datasets[j].title
+          })
+        };
+      }
     }
-    
   }
-
   return {
     dataPointCharts,
   };
@@ -71,14 +89,13 @@ export function scatterMatrix<Datum extends DataChartPointMatrix, PElement exten
     .classed('chart-scatterplot-matrix', true)
     .each((d, i, g) => {
 
-      const N = d.dataPointCharts.length;
-      const n = Math.sqrt(N);
+      const n = d.dataPointCharts.length;
       const gridColumns : string[] = [];
       const gridRows : string[] = [];
-      for (let i = 0; i < n; i++) {
+      for (let k = 0; k < n; k++) {
         gridColumns.push('1fr');
       }
-      for (let i = 0; i < n; i++) {
+      for (let k = 0; k < n; k++) {
         gridRows.push('1fr');
       }
       const gridTemplate = gridRows.join(' ') + ' / ' + gridColumns.join(' ');
@@ -87,33 +104,44 @@ export function scatterMatrix<Datum extends DataChartPointMatrix, PElement exten
       .layout('grid-template', gridTemplate)
       .attr('overflow','visible');
 
-      for (let i = 0; i < N; i++) {
-        const chartContainer = s
-        .append('svg')
-        .classed('sub-chart', true)
-        .layout('display', 'grid')
-        .layout('grid-template', '1fr/1fr')
-        .layout('margin','20px');
-
-        const drawArea = chartContainer
+      for (let k = 0; k < n; k++) {
+        for (let j  = 0; j < n; j++) {
+          const chartContainer = s
           .append('svg')
+          .classed('sub-chart', true)
           .layout('display', 'grid')
-          .layout('grid-area', '1/1')
-          .classed('draw-area', true)
-          .attr('overflow', 'visible')
+          .layout('grid-template', '1fr/1fr')
+          .layout('margin','5px');
 
-        drawArea
-        .append('rect')
-        .attr('fill', 'white')
-        .classed('background', true)
-        .layout('grid-area', '1 / 1')
+          const dataPointChart = d.dataPointCharts[k][j];
+          if (dataPointChart.dataset === undefined) {
+            chartContainer.append('text')
+            .attr('y','50%')
+            .attr('x','50%')
+            .attr('dominant-baseline','middle')
+            .attr('text-anchor', 'middle')
+            .text(dataPointChart.title);
+          } else {
+            const drawArea = chartContainer
+            .append('svg')
+            .layout('display', 'grid')
+            .layout('grid-area', '1/1')
+            .classed('draw-area', true)
+            .attr('overflow', 'visible')
 
-        const pointSeries = drawArea
-          .append('g')
-          .layout('grid-area', '1/1')
-          .datum((d) => dataSeriesPoint(d.dataPointCharts[i]))
-          .call((s) => seriesPoint(s));
+            drawArea
+            .append('rect')
+            .attr('fill', 'white')
+            .classed('background', true)
+            .layout('grid-area', '1 / 1')
 
+            const pointSeries = drawArea
+              .append('g')
+              .layout('grid-area', '1/1')
+              .datum((d) => dataSeriesPoint(dataPointChart.dataset!))
+              .call((s) => seriesPoint(s));
+          }
+        }
       }
     })
     .on('datachange.scatterMatrix', function (e, chartData) {
