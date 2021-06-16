@@ -29,11 +29,24 @@
     <script type="module">
       import data from './data/scatterplot-matrix.js';
 
-
+      const datasets = []
+      for (let i = 0; i < 5; i++) {
+        const values = []
+        for (let j = 0; j < 50; j++) {
+          values.push(Math.floor(Math.random() * 500))
+        }
+        const set = {
+          title: `Dataset ${i}`,
+          values
+        }
+        datasets.push(set)
+      }
       const root = d3.select('#chart');
       const layouter = root.append('div').call(respVis.layouter);
       const chartDatum = respVis.dataChartPointMatrix({
-        datasets: data.datasets
+        datasets: data.datasets,
+        // datasets,
+        radius: 2
       })
       const chart = layouter.append('svg').datum(chartDatum).call(respVis.scatterMatrix)
       window.addEventListener('resize', configure);

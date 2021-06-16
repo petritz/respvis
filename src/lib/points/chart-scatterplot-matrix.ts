@@ -111,6 +111,7 @@ export function scatterMatrix<Datum extends DataChartPointMatrix, PElement exten
           .classed('sub-chart', true)
           .layout('display', 'grid')
           .layout('grid-template', '1fr/1fr')
+          .layout('aspect-ratio', '1')
           .layout('margin','5px');
 
           const dataPointChart = d.dataPointCharts[k][j];
