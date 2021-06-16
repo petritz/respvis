@@ -52,8 +52,7 @@
           configureMainAxis: (a) => a.ticks(window.matchMedia(wideMediaQuery).matches ? 10 : 5),
           crossValues: runs,
           crossTitle: runAxisTitle,
-          crossScale: runScale,
-          lineType: 'smooth'
+          crossScale: runScale
         }),
         chart = layouter.append('svg').datum(chartDatum).call(respVis.chartLine)
 

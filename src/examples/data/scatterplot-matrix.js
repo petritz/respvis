@@ -15,6 +15,10 @@ export default {
         {
             title: "Title D",
             values: [100,200,300,100,500]
+        },
+        {
+            title: "Title E",
+            values: [413, 122, 442, 322, 200]
         }
     ]
 }
