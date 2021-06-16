@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+  <head>
+    <title>RespVis - Small Multiples Bar Chart</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8" />
+    <style>
+      body {
+        background-color: floralwhite;
+      }
+
+      #chart {
+        width: 100%;
+        height: 80vh;
+        min-height: 25rem;
+      }
+
+      .container {
+        font-size: 24px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Small Multiples Bar Chart</h1>
+    <div id="chart">
+    </div>
+    <script src="./vendor/d3.v6.js"></script>
+    <script src="../respvis.js"></script>
+    <script type="module">
+      import data from './data/scatterplot-matrix.js';
+
+
+      const root = d3.select('#chart');
+      const layouter = root.append('div').call(respVis.layouter);
+      const chartDatum = respVis.dataChartPointMatrix({
+        datasets: data.datasets
+      })
+      const chart = layouter.append('svg').datum(chartDatum).call(respVis.scatterMatrix)
+      window.addEventListener('resize', configure);
+      configure();
+
+      function configure() {
+        chart.datum(chartDatum);
+      }
+    </script>
+  </body>
+</html>
