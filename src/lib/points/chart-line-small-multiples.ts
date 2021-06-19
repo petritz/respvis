@@ -27,12 +27,13 @@ export interface DataChartPointSmallMultiples {
   crossScale: ScaleContinuousNumeric<number, number>;
 }
 
-const colWidth = 250;
+const baseColWidth = 250;
 function computeGridTemplate(elem: SVGSVGElement, n: number) : {
   template: string,
   cols: number,
   rows: number
 } {
+  const colWidth = baseColWidth * window.devicePixelRatio;
   const containerWidth = elem.parentElement!.clientWidth;
   let cols = Math.ceil(Math.sqrt(n));
   if (cols * colWidth > containerWidth) {
@@ -117,7 +118,7 @@ export function chartLineSmallMultiples<Datum extends DataChartPointSmallMultipl
           .layout('display', 'grid')
           .layout('grid-template', 'auto 1fr auto / auto 1fr')
           .layout('padding','20px');
-        
+
         const drawArea = container
           .append('svg')
           .classed('draw-area', true)

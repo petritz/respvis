@@ -76,12 +76,13 @@ export function dataChartBarSmallMultiples(data?: Partial<DataChartBarSmallMulti
   };
 }
 
-const colWidth = 250;
+const baseColWidth = 250;
 function computeGridTemplate(elem: SVGSVGElement, n: number) : {
   template: string,
   cols: number,
   rows: number
 } {
+  const colWidth = baseColWidth * window.devicePixelRatio;
   const containerWidth = elem.parentElement!.clientWidth;
   let cols = Math.ceil(Math.sqrt(n));
   if (cols * colWidth > containerWidth) {
