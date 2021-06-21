@@ -44,7 +44,7 @@ export function dataChartBarSmallMultiples(data?: Partial<DataChartBarSmallMulti
   const crossValues = data?.crossValues || [];
   const crossValuesFlat = crossValues.reduce((acc, val) => acc.concat(val), []) || [];
   const crossScale = scaleLinear()
-    .domain([0, Math.max(...crossValuesFlat)])
+    .domain([Math.min(...crossValuesFlat), Math.max(...crossValuesFlat)])
     .nice();
   const mainTitle = data?.mainTitle || '';
   const crossTitle = data?.crossTitle || '';
@@ -76,7 +76,7 @@ export function dataChartBarSmallMultiples(data?: Partial<DataChartBarSmallMulti
   };
 }
 
-const baseColWidth = 250;
+const baseColWidth = 400;
 function computeGridTemplate(elem: SVGSVGElement, n: number) : {
   template: string,
   cols: number,

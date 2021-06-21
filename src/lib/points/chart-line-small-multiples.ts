@@ -1,7 +1,7 @@
 import { ScaleBand, scaleBand, ScaleContinuousNumeric, scaleLinear  } from 'd3-scale';
 import { BaseType, select, Selection } from 'd3-selection';
 import { axisBottom, axisLeft, ConfigureAxisFn, DataAxis, dataAxis } from '../axis';
-import {chart, COLORS_CATEGORICAL, textHorizontalAttrs, textTitleAttrs, textVerticalAttrs} from '../core';
+import {chart, COLORS_CATEGORICAL, dataSeries, textHorizontalAttrs, textTitleAttrs, textVerticalAttrs} from '../core';
 import {
   dataChartPoint,
   DataChartPoint,
@@ -23,11 +23,11 @@ export interface DataChartPointSmallMultiples {
   dataChartPoint: DataChartPoint[],
   mainValues: any[];
   crossValues: number[][];
-  mainScale: ScaleBand<any>;
+  mainScale: ScaleContinuousNumeric<number, number>;
   crossScale: ScaleContinuousNumeric<number, number>;
 }
 
-const baseColWidth = 250;
+const baseColWidth = 400;
 function computeGridTemplate(elem: SVGSVGElement, n: number) : {
   template: string,
   cols: number,
@@ -60,11 +60,11 @@ function computeGridTemplate(elem: SVGSVGElement, n: number) : {
 
 export function dataChartPointSmallMultiples(data?: Partial<DataChartPointSmallMultiples>): DataChartPointSmallMultiples {
   const mainValues = data?.mainValues || [];
-  const mainScale = scaleBand().domain(mainValues).padding(0.1);
+  const mainScale = scaleLinear().domain([Math.min(...mainValues), Math.max(...mainValues)]);
   const crossValues = data?.crossValues || [];
   const crossValuesFlat = crossValues.reduce((acc, val) => acc.concat(val), []) || [];
   const crossScale = scaleLinear()
-    .domain([0, Math.max(...crossValuesFlat)])
+    .domain([Math.min(...crossValuesFlat), Math.max(...crossValuesFlat)])
     .nice();
   const mainTitle = data?.mainTitle || "";
   const crossTitle = data?.crossTitle || "";
@@ -138,11 +138,19 @@ export function chartLineSmallMultiples<Datum extends DataChartPointSmallMultipl
           .call((s) => textTitleAttrs(s))
           .text(d.gridValues[i]);
 
-        const barSeries = drawArea
+
+        const dataPoints = dataSeriesPoint(d.dataChartPoint[i]);
+        drawArea
           .append('g')
           .layout('grid-area', '1 / 1')
-          .datum((d) => dataSeriesPoint(d.dataChartPoint[i]))
-          .call((s) => seriesPointLine(s));
+          .datum(dataPoints)
+          .call((s) => seriesPointLine(s, 2));
+
+        drawArea
+          .append('g')
+          .datum(dataPoints)
+          .call((s) => seriesPoint(s))
+          .layout('grid-area', '1 / 1');
 
         container
           .append('g')
