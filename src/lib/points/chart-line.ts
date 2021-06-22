@@ -86,7 +86,7 @@ export function chartLine<Datum extends DataChartLine, PElement extends BaseType
       s.append('g')
         .layout('grid-area', '1 / 1')
         .datum((d) => dataAxis())
-        .call((s) => axisLeft(s));
+        .call((s) => axisLeft(s, 'center'));
 
       s.append('g')
         .layout('grid-area', '2 / 2')
@@ -104,7 +104,7 @@ export function chartLineDataChange<Datum extends DataChartLine, PElement extend
 ): Selection<SVGSVGElement, Datum, PElement, PDatum> {
   return selection.each(function (chartData, i, g) {
     const s = select<SVGSVGElement, Datum>(g[i]);
-       
+
     const axisConfig = (selection: Selection<Element, DataAxis>, main: boolean) =>
       selection
         .datum((d) =>

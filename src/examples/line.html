@@ -48,7 +48,7 @@
       // for(var i=0; i<runs.length; i++){
       //   labelsStr.push(year[i]+':'+runs[i]);
       // }
-      
+
       const root = d3.select('#chart'),
         layouter = root.append('div').call(respVis.layouter),
         chartDatum = respVis.dataChartLine({
@@ -70,7 +70,7 @@
         // chart.datum(chartDatum);
         var leftAxis = document.getElementsByClassName('axis-cross')[0];
         var rightAxis = document.getElementsByClassName('axis-main')[0];
-        
+
         if (window.matchMedia(wideMediaQuerySmall).matches) {
           leftAxis.style.display = 'block';
           rightAxis.style.display = 'block';
@@ -82,7 +82,7 @@
         else{
           leftAxis.style.display = 'none';
           rightAxis.style.display = 'none';
-          
+
           setTimeout(function() {
             var textLabels = document.getElementsByClassName('series-point-labels')[0];
             textLabels.style.display = 'block';

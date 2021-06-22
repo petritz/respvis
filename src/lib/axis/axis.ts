@@ -41,7 +41,8 @@ export function axisLeft<
   PElement extends BaseType,
   PDatum
 >(
-  selection: Selection<GElement, Datum, PElement, PDatum>
+  selection: Selection<GElement, Datum, PElement, PDatum>,
+  alignment: string  = 'flex-start'
 ): Selection<GElement, Datum, PElement, PDatum> {
   return axis(selection)
     .classed('axis-left', true)
@@ -52,6 +53,8 @@ export function axisLeft<
       s
         .selectAll<SVGTextElement, unknown>('.title')
         .layout('margin-right', '0.5em')
+        .layout('display', 'flex')
+        .layout('align-self', alignment)
         .call((title) => textVerticalAttrs(title))
         .call((title) => textTitleAttrs(title))
     )
@@ -99,13 +102,14 @@ export function axisBottom<
   PElement extends BaseType,
   PDatum
 >(
-  selection: Selection<GElement, Datum, PElement, PDatum>, centerLabel = 'flex-end'
+  selection: Selection<GElement, Datum, PElement, PDatum>,
+  alignment = 'flex-end'
 ): Selection<GElement, Datum, PElement, PDatum> {
   return axis(selection)
     .classed('axis-bottom', true)
     .layout('display', 'flex')
     .layout('flex-direction', 'column')
-    .layout('align-items', centerLabel)
+    .layout('align-items', alignment)
     .call((s) => s.selectAll('.ticks-transform').layout('height', 'fit').layout('width', '100%'))
     .call((s) =>
       s
