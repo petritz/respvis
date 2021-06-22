@@ -99,13 +99,13 @@ export function axisBottom<
   PElement extends BaseType,
   PDatum
 >(
-  selection: Selection<GElement, Datum, PElement, PDatum>
+  selection: Selection<GElement, Datum, PElement, PDatum>, centerLabel = 'flex-end'
 ): Selection<GElement, Datum, PElement, PDatum> {
   return axis(selection)
     .classed('axis-bottom', true)
     .layout('display', 'flex')
     .layout('flex-direction', 'column')
-    .layout('align-items', 'flex-end')
+    .layout('align-items', centerLabel)
     .call((s) => s.selectAll('.ticks-transform').layout('height', 'fit').layout('width', '100%'))
     .call((s) =>
       s

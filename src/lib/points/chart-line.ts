@@ -11,7 +11,8 @@ import {
   dataSeriesPoint,
   seriesPoint,
   seriesPointLine,
-  PathType
+  PathType,
+  seriesPointLabels,
 } from './series-point';
 
 export interface DataChartLine extends DataChartPoint {
@@ -46,7 +47,8 @@ export function chartLine<Datum extends DataChartLine, PElement extends BaseType
         .append('svg')
         .classed('draw-area', true)
         .layout('grid-area', '1 / 2')
-        .layout('display', 'grid');
+        .layout('display', 'grid')
+        .style('overflow', 'visible');
 
       drawArea
         .append('rect')
@@ -74,6 +76,13 @@ export function chartLine<Datum extends DataChartLine, PElement extends BaseType
           .layout('grid-area', '1 / 1');
       }
 
+      const pointSeriesLabels = drawArea
+        .append('g')
+        .datum(dataPoints)
+        .call((s) => seriesPointLabels(s))
+        .layout('grid-area', '1 / 1')
+        .style('display', 'none');
+
       s.append('g')
         .layout('grid-area', '1 / 1')
         .datum((d) => dataAxis())
@@ -82,7 +91,7 @@ export function chartLine<Datum extends DataChartLine, PElement extends BaseType
       s.append('g')
         .layout('grid-area', '2 / 2')
         .datum((d) => dataAxis())
-        .call((s) => axisBottom(s));
+        .call((s) => axisBottom(s, 'center'));
     })
     .on('datachange.chartline', function (e, chartData) {
       chartLineDataChange(select<SVGSVGElement, Datum>(this));
@@ -95,6 +104,7 @@ export function chartLineDataChange<Datum extends DataChartLine, PElement extend
 ): Selection<SVGSVGElement, Datum, PElement, PDatum> {
   return selection.each(function (chartData, i, g) {
     const s = select<SVGSVGElement, Datum>(g[i]);
+       
     const axisConfig = (selection: Selection<Element, DataAxis>, main: boolean) =>
       selection
         .datum((d) =>

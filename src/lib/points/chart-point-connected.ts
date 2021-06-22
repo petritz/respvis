@@ -65,7 +65,7 @@ export function chartPointConnected<Datum extends DataChartPoint, PElement exten
       s.append('g')
         .layout('grid-area', '2 / 2')
         .datum((d) => dataAxis())
-        .call((s) => axisBottom(s));
+        .call((s) => axisBottom(s, 'center'));
     })
     .on('datachange.chartpointconnected', function (e, chartData) {
       chartPointConnectedDataChange(select<SVGSVGElement, Datum>(this));

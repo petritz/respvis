@@ -153,7 +153,7 @@ export function chartLineSmallMultiples<Datum extends DataChartPointSmallMultipl
         container
           .append('g')
           .datum((d) => dataAxis())
-          .call((s) => axisBottom(s))
+          .call((s) => axisBottom(s, 'center'))
           .layout('grid-area', '3 / 2 / 4 / 3');
       }
     })

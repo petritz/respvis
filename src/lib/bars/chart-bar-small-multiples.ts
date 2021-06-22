@@ -169,7 +169,7 @@ export function chartBarSmallMultiples<Datum extends DataChartBarSmallMultiples,
         chartContainer
           .append('g')
           .datum((d) => dataAxis())
-          .call((s) => axisBottom(s))
+          .call((s) => axisBottom(s, 'center'))
           .layout('grid-area', '3 / 2 / 4 / 3');
       }
     })

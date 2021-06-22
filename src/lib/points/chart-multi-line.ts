@@ -141,7 +141,7 @@ export function chartMultiLine<Datum extends DataChartMultiLine, PElement extend
       s.append('g')
         .layout('grid-area', '2 / 2')
         .datum((d) => dataAxis())
-        .call((s) => axisBottom(s));
+        .call((s) => axisBottom(s, 'center'));
     })
     .on('datachange.chartmultiline', function (e, chartData) {
       chartMultiLineDataChange(select<SVGSVGElement, Datum>(this));

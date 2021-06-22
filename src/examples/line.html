@@ -42,7 +42,13 @@
               runAxisTitle = 'Fire Department Runs in Graz';
 
       const wideMediaQuery = 'screen and (min-width: 40rem)';
+      const wideMediaQuerySmall = 'screen and (min-width: 32rem)';
 
+      // var labelsStr = []
+      // for(var i=0; i<runs.length; i++){
+      //   labelsStr.push(year[i]+':'+runs[i]);
+      // }
+      
       const root = d3.select('#chart'),
         layouter = root.append('div').call(respVis.layouter),
         chartDatum = respVis.dataChartLine({
@@ -52,7 +58,8 @@
           configureMainAxis: (a) => a.ticks(window.matchMedia(wideMediaQuery).matches ? 10 : 5),
           crossValues: runs,
           crossTitle: runAxisTitle,
-          crossScale: runScale
+          crossScale: runScale,
+          labels: runs
         }),
         chart = layouter.append('svg').datum(chartDatum).call(respVis.chartLine)
 
@@ -60,7 +67,49 @@
       configure();
 
       function configure() {
-        if (window.matchMedia(wideMediaQuery).matches) {
+        // chart.datum(chartDatum);
+        var leftAxis = document.getElementsByClassName('axis-cross')[0];
+        var rightAxis = document.getElementsByClassName('axis-main')[0];
+        
+        if (window.matchMedia(wideMediaQuerySmall).matches) {
+          leftAxis.style.display = 'block';
+          rightAxis.style.display = 'block';
+          setTimeout(function() {
+            var textLabels = document.getElementsByClassName('series-point-labels')[0];
+            textLabels.style.display = 'none';
+          }, 300);
+        }
+        else{
+          leftAxis.style.display = 'none';
+          rightAxis.style.display = 'none';
+          
+          setTimeout(function() {
+            var textLabels = document.getElementsByClassName('series-point-labels')[0];
+            textLabels.style.display = 'block';
+            const textLabelsChildren = textLabels.children;
+            for( var i=0; i<textLabelsChildren.length; i++){
+              if( i==0 || i==textLabelsChildren.length-1)
+                textLabelsChildren[i].style.display = 'block';
+              else
+                textLabelsChildren[i].style.display = 'none';
+            }
+
+            var seriesPoints = document.getElementsByClassName('series-point')[0].children;
+            for( var i=0; i<seriesPoints.length; i++){
+              seriesPoints[i].setAttribute('index', i);
+              seriesPoints[i].addEventListener('mouseover', function(){
+                const curIndex = this.getAttribute('index');
+                document.getElementsByClassName('series-point-labels')[0].children[curIndex].style.display = 'block';
+              });
+
+              if(i!=0 && i!=seriesPoints.length-1){
+                seriesPoints[i].addEventListener('mouseout', function(){
+                  const curIndex = this.getAttribute('index');
+                  document.getElementsByClassName('series-point-labels')[0].children[curIndex].style.display = 'none';
+                });
+              }
+            }
+          }, 300);
         }
       }
     </script>
