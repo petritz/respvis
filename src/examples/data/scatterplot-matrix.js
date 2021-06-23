@@ -1,3 +1,5 @@
+// data taken from penguins.csv available at https://github.com/mwaskom/seaborn-data
+// which originates from https://github.com/allisonhorst/palmerpenguins
 export default {
     datasets: [
         {
