@@ -91,7 +91,7 @@ function onScatterClick(row : number, column : number) {
 
 const focusedChart = {
   row: 0,
-  column: 0
+  column: 1
 }
 
 export function scatterMatrix<Datum extends DataChartPointMatrix, PElement extends BaseType, PDatum>(
@@ -113,42 +113,33 @@ export function scatterMatrix<Datum extends DataChartPointMatrix, PElement exten
       const gridTemplate = gridRows.join(' ') + ' / ' + gridColumns.join(' ');
       const s = select<SVGSVGElement, Datum>(g[i])
       .layout('display', 'flex')
-      // .layout('grid-template', '1fr 1fr / 1fr')
       .attr('overflow','visible');
 
-      const matrixContainer = s.append('svg')
+      const matrixContainer = s.append('g')
       .classed('matrix-charts', true)
       .layout('display', 'grid')
       .layout('grid-template', gridTemplate)
       .layout('width', '50%')
       .attr('overflow','visible');
 
-      const focusContainer = s.append('svg')
-      .layout('display', 'grid')
-      .layout('grid-template', '1fr / 1fr')
+      const focusContainer = s.append('g')
+      .layout('display','grid')
+      .layout('grid-template','1fr /  1fr')
+      .layout('place-items', 'center center')
+      .layout('height','100%')
       .layout('width', '50%')
       .classed('matrix-focus',true);
-      // focus label
-      const matrixFocusLabel = focusContainer.append('svg')
-      .classed('matrix-focus-label', true)
-      .layout('grid-template', '1fr / 1fr')
-      .layout('margin','5px')
-      .layout('display', 'grid');
 
-      matrixFocusLabel.append('text')
-      .attr('y','50%')
-      .attr('x','50%')
-      .attr('dominant-baseline','middle')
-      .attr('text-anchor', 'middle')
-      .text("focus area");
-
-      // focus chart
-      const matrixFocusChart = focusContainer.append('svg')
+      const matrixFocusChartContainer = focusContainer.append('g')
       .classed('matrix-focus-chart', true)
+      .layout('aspect-ratio','1')
+      .layout('display','grid');
+
+      const matrixFocusChart = matrixFocusChartContainer.append('g')
+      .layout('grid-area','1 / 1')
       .layout('grid-template', '1fr auto / auto 1fr')
       .layout('padding', '20px')
-      .layout('margin','5px')
-      .layout('display','none');
+      .layout('display','grid');
 
       const focusDrawArea = matrixFocusChart
       .append('svg')
@@ -189,9 +180,6 @@ export function scatterMatrix<Datum extends DataChartPointMatrix, PElement exten
           .layout('aspect-ratio', '1')
           .layout('margin','5px');
 
-          const chartContainerNode  = chartContainer.node()
-          chartContainerNode!.addEventListener('click', () => onScatterClick(k, j));
-
           const dataPointChart = d.dataPointCharts[k][j];
           if (dataPointChart.dataset === undefined) {
             chartContainer.append('text')
@@ -201,6 +189,9 @@ export function scatterMatrix<Datum extends DataChartPointMatrix, PElement exten
             .attr('text-anchor', 'middle')
             .text(dataPointChart.title);
           } else {
+            const chartContainerNode  = chartContainer.node()
+            chartContainerNode!.addEventListener('click', () => onScatterClick(k, j));
+
             const drawArea = chartContainer
             .append('svg')
             .layout('display', 'grid')
@@ -240,61 +231,57 @@ export function scatterMatrixDataChange<Datum extends DataChartPointMatrix, PEle
     const containerWidth = g[i].parentElement!.clientWidth;
     if (containerWidth <= breakPoint * window.devicePixelRatio) {
       s.layout('flex-direction', 'column-reverse');
-      s.select<SVGSVGElement>('.matrix-charts')
+      s.select<SVGGElement>('.matrix-charts')
       .layout('width', '100%')
       .layout('height', '50%');
-      s.select<SVGSVGElement>('.matrix-focus')
+      s.select<SVGGElement>('.matrix-focus')
+      .layout('display','flex')
+      .layout('align-items','center')
+      .layout('justify-content','center')
       .layout('width', '100%')
       .layout('height', '50%');
+
+      s.select<SVGGElement>('.matrix-focus-chart')
+      .layout('height','100%')
+      .layout('width','auto');
     } else {
       s.layout('flex-direction', 'row');
-      s.select<SVGSVGElement>('.matrix-charts')
+      s.select<SVGGElement>('.matrix-charts')
+      .layout('height', '100%')
       .layout('width', '50%');
-      s.select<SVGSVGElement>('.matrix-focus')
+      s.select<SVGGElement>('.matrix-focus')
+      .layout('display','grid')
+      .layout('grid-template','1fr /  1fr')
+      .layout('place-items', 'center center')
+      .layout('height', '100%')
       .layout('width', '50%');
+
+      s.select<SVGGElement>('.matrix-focus-chart')
+      .layout('height','auto')
+      .layout('width','100%');
     }
 
-    if (focusedChart.row === focusedChart.column) {
-      s.select<SVGSVGElement>('.matrix-focus-chart')
-      .layout('display', 'none');
+    const row = focusedChart.row;
+    const column = focusedChart.column;
+    const dataPointChart = chartData.dataPointCharts[row][column];
+    s.select<SVGGElement>('.matrix-focus-points')
+      .datum((d) => dataSeriesPoint(dataPointChart.dataset!))
+      .call((s) => seriesPoint(s));
 
-      const labelContainer = s.select<SVGSVGElement>('.matrix-focus-label')
-      .layout('display', 'grid');
+    const axisConfig = (selection: Selection<Element, DataAxis>, main: boolean) =>
+      selection
+        .datum((d) =>
+          Object.assign(d, {
+            scale: main ? dataPointChart.dataset!.mainScale :  dataPointChart.dataset!.crossScale,
+            title: main ?  dataPointChart.dataset!.mainTitle :  dataPointChart.dataset!.crossTitle,
+            configureAxis: main ?  dataPointChart.dataset!.configureMainAxis :  dataPointChart.dataset!.configureCrossAxis,
+          })
+        )
+        .classed('axis-main', main)
+        .classed('axis-cross', !main);
 
-      const row = focusedChart.row;
-      const column = focusedChart.column;
-      const dataPointChart = chartData.dataPointCharts[row][column];
+    s.selectAll<SVGGElement, DataAxis>('.axis-left').call((s) => axisConfig(s, false));
+    s.selectAll<SVGGElement, DataAxis>('.axis-bottom').call((s) => axisConfig(s, true));
 
-      labelContainer.selectChild<SVGSVGElement>().text(dataPointChart.title);
-    } else {
-      s.select<SVGSVGElement>('.matrix-focus-chart')
-      .layout('display', 'grid');
-
-      s.select<SVGSVGElement>('.matrix-focus-label')
-      .layout('display', 'none');
-
-
-      const row = focusedChart.row;
-      const column = focusedChart.column;
-      const dataPointChart = chartData.dataPointCharts[row][column];
-      s.select<SVGSVGElement>('.matrix-focus-points')
-        .datum((d) => dataSeriesPoint(dataPointChart.dataset!))
-        .call((s) => seriesPoint(s));
-
-      const axisConfig = (selection: Selection<Element, DataAxis>, main: boolean) =>
-        selection
-          .datum((d) =>
-            Object.assign(d, {
-              scale: main ? dataPointChart.dataset!.mainScale :  dataPointChart.dataset!.crossScale,
-              title: main ?  dataPointChart.dataset!.mainTitle :  dataPointChart.dataset!.crossTitle,
-              configureAxis: main ?  dataPointChart.dataset!.configureMainAxis :  dataPointChart.dataset!.configureCrossAxis,
-            })
-          )
-          .classed('axis-main', main)
-          .classed('axis-cross', !main);
-
-      s.selectAll<SVGGElement, DataAxis>('.axis-left').call((s) => axisConfig(s, false));
-      s.selectAll<SVGGElement, DataAxis>('.axis-bottom').call((s) => axisConfig(s, true));
-    }
   });
 }
