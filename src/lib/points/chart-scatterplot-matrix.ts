@@ -82,16 +82,27 @@ export function dataChartPointMatrix(data?: Partial<DataChartPointMatrixInput>):
   };
 }
 
-function onScatterClick(row : number, column : number) {
+function onScatterClick(row : number, column : number, node: SVGSVGElement) {
+  if (focusedChart.node !== undefined && focusedChart.node === node) {
+    return;
+  }
+
+  select(node).attr('stroke','red');
+  if (focusedChart.node !== undefined) {
+    select(focusedChart.node!).attr('stroke','none');
+  }
+
+  focusedChart.node = node;
   focusedChart.row = row;
   focusedChart.column = column;
 
   window.dispatchEvent(new Event('resize'));
 }
 
-const focusedChart = {
+const focusedChart: {row: number, column: number, node: SVGSVGElement|undefined} = {
   row: 0,
-  column: 1
+  column: 1,
+  node: undefined
 }
 
 export function scatterMatrix<Datum extends DataChartPointMatrix, PElement extends BaseType, PDatum>(
@@ -189,8 +200,12 @@ export function scatterMatrix<Datum extends DataChartPointMatrix, PElement exten
             .attr('text-anchor', 'middle')
             .text(dataPointChart.title);
           } else {
-            const chartContainerNode  = chartContainer.node()
-            chartContainerNode!.addEventListener('click', () => onScatterClick(k, j));
+            const chartContainerNode = chartContainer.node()
+            if (k === focusedChart.row && j === focusedChart.column) {
+              chartContainer.attr('stroke','red');
+              focusedChart.node = chartContainerNode!;
+            }
+            chartContainerNode!.addEventListener('click', () => onScatterClick(k, j, chartContainerNode!));
 
             const drawArea = chartContainer
             .append('svg')
