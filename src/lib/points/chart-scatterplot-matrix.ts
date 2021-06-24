@@ -82,7 +82,7 @@ export function dataChartPointMatrix(data?: Partial<DataChartPointMatrixInput>):
   };
 }
 
-function onScatterClick(row : number, column : number, node: SVGSVGElement) {
+function onScatterClick(row : number, column : number, node: SVGRectElement) {
   if (focusedChart.node !== undefined && focusedChart.node === node) {
     return;
   }
@@ -99,7 +99,7 @@ function onScatterClick(row : number, column : number, node: SVGSVGElement) {
   window.dispatchEvent(new Event('resize'));
 }
 
-const focusedChart: {row: number, column: number, node: SVGSVGElement|undefined} = {
+const focusedChart: {row: number, column: number, node: SVGRectElement|undefined} = {
   row: 0,
   column: 1,
   node: undefined
@@ -200,12 +200,7 @@ export function scatterMatrix<Datum extends DataChartPointMatrix, PElement exten
             .attr('text-anchor', 'middle')
             .text(dataPointChart.title);
           } else {
-            const chartContainerNode = chartContainer.node()
-            if (k === focusedChart.row && j === focusedChart.column) {
-              chartContainer.attr('stroke','red');
-              focusedChart.node = chartContainerNode!;
-            }
-            chartContainerNode!.addEventListener('click', () => onScatterClick(k, j, chartContainerNode!));
+
 
             const drawArea = chartContainer
             .append('svg')
@@ -214,11 +209,20 @@ export function scatterMatrix<Datum extends DataChartPointMatrix, PElement exten
             .classed('draw-area', true)
             .attr('overflow', 'visible');
 
-            drawArea
+            const bg = drawArea
             .append('rect')
             .attr('fill', 'white')
             .classed('background', true)
             .layout('grid-area', '1 / 1');
+
+
+            const chartContainerNode = chartContainer.node();
+            const bgNode = bg.node();
+            chartContainerNode!.addEventListener('click', () => onScatterClick(k, j, bgNode!));
+            if (k === focusedChart.row && j === focusedChart.column) {
+              bg.attr('stroke','red');
+              focusedChart.node = bgNode!;
+            }
 
             const pointSeries = drawArea
               .append('g')
