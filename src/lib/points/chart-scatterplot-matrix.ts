@@ -205,6 +205,7 @@ export function scatterMatrix<Datum extends DataChartPointMatrix, PElement exten
 
             const bg = drawArea
             .append('rect')
+            .attr('stroke-width','2')
             .attr('fill', 'white')
             .classed('background', true)
             .layout('grid-area', '1 / 1');
@@ -296,5 +297,11 @@ export function scatterMatrixDataChange<Datum extends DataChartPointMatrix, PEle
     s.selectAll<SVGGElement, DataAxis>('.axis-left').call((s) => axisConfig(s, false));
     s.selectAll<SVGGElement, DataAxis>('.axis-bottom').call((s) => axisConfig(s, true));
 
+    window.setTimeout(() => {
+      const layout = g[i].parentElement;
+      const scrollHeight = layout!.scrollHeight;
+      const clientHeight = layout!.clientHeight;
+      layout!.parentElement!.style.marginBottom = (scrollHeight > clientHeight ? (scrollHeight - clientHeight) + 'px' : '0');
+    }, 300);
   });
 }

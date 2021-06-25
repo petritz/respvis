@@ -192,5 +192,12 @@ export function chartLineSmallMultiplesDataChange<Datum extends DataChartPointSm
 
     s.selectAll<SVGGElement, DataAxis>('.axis-left').call((s) => axisConfig(s, false));
     s.selectAll<SVGGElement, DataAxis>('.axis-bottom').call((s) => axisConfig(s, true));
+
+    window.setTimeout(() => {
+      const layout = g[i].parentElement;
+      const scrollHeight = layout!.scrollHeight;
+      const clientHeight = layout!.clientHeight;
+      layout!.parentElement!.style.marginBottom = (scrollHeight > clientHeight ? (scrollHeight - clientHeight) + 'px' : '0');
+    }, 300);
   });
 }
