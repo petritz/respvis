@@ -1,14 +1,12 @@
-import { ScaleBand, scaleBand, ScaleContinuousNumeric, scaleLinear  } from 'd3-scale';
+import { ScaleContinuousNumeric, scaleLinear  } from 'd3-scale';
 import { BaseType, select, Selection } from 'd3-selection';
 import { axisBottom, axisLeft, ConfigureAxisFn, DataAxis, dataAxis } from '../axis';
-import {chart, COLORS_CATEGORICAL, dataSeries, textHorizontalAttrs, textTitleAttrs, textVerticalAttrs} from '../core';
+import {chart, textHorizontalAttrs, textTitleAttrs} from '../core';
 import {
   dataChartPoint,
   DataChartPoint,
 } from './chart-point';
 import {
-  dataPointsCreation,
-  DataPointsCreation,
   dataSeriesPoint,
   seriesPoint,
   seriesPointLine,
@@ -155,7 +153,7 @@ export function chartLineSmallMultiples<Datum extends DataChartPointSmallMultipl
         container
           .append('g')
           .datum((d) => dataAxis())
-          .call((s) => axisLeft(s))
+          .call((s) => axisLeft(s, 'center'))
           .layout('grid-area', '2 / 1 / 3 / 2');
 
         container

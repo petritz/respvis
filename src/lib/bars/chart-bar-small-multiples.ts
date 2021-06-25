@@ -6,24 +6,18 @@ import {
   debug,
   nodeToString,
   textHorizontalAttrs,
-  textTitleAttrs,
-  textVerticalAttrs
+  textTitleAttrs
 } from '../core';
 import {
-  chartBar,
   DataChartBar,
   dataChartBar
 } from './chart-bar';
 import {
-  DataBarsCreation,
-  dataBarsCreation,
-  Orientation,
   seriesBar,
   dataSeriesBar,
 } from './series-bar';
 import { seriesLabel } from './series-label';
 import { dataLabelsBarCreation, dataSeriesLabelBar } from './series-label-bar';
-import { debounce } from "debounce";
 
 export interface DataChartBarSmallMultiples{
   mainTitle: string;
@@ -163,7 +157,7 @@ export function chartBarSmallMultiples<Datum extends DataChartBarSmallMultiples,
         chartContainer
           .append('g')
           .datum((d) => dataAxis())
-          .call((s) => axisLeft(s))
+          .call((s) => axisLeft(s, 'center'))
           .layout('grid-area', '2 / 1 / 3 / 2');
 
         chartContainer
@@ -184,7 +178,6 @@ function updateGrid<Datum extends DataChartBarSmallMultiples>(chartData: DataCha
   const s = select<SVGSVGElement, Datum>(g[i]);
   const n = chartData.gridValues.length
   const gridTemplate = computeGridTemplate(g[i], n);
-  // TODO: debounce
   s.layout('grid-template', gridTemplate.template);
 
   const axisConfig = (selection: Selection<Element, DataAxis>, main: boolean) =>
@@ -203,13 +196,10 @@ function updateGrid<Datum extends DataChartBarSmallMultiples>(chartData: DataCha
   s.selectAll<SVGGElement, DataAxis>('.axis-bottom').call((s) => axisConfig(s, true));
 }
 
-// const debouncedUpdateGrid = debounce(updateGrid, 100);
-
 export function chartBarSmallMultiplesDataChange<Datum extends DataChartBarSmallMultiples, PElement extends BaseType, PDatum>(
   selection: Selection<SVGSVGElement, Datum, PElement, PDatum>
 ): Selection<SVGSVGElement, Datum, PElement, PDatum> {
   return selection.each(function (chartData, i, g) {
-    // debouncedUpdateGrid(chartData, i, g);
     updateGrid(chartData, i, g);
   });
 }

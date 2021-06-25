@@ -1,13 +1,11 @@
 import { BaseType, select, Selection } from 'd3-selection';
-import { axisBottom, axisLeft, ConfigureAxisFn, DataAxis, dataAxis } from '../axis';
-import {chart, COLORS_CATEGORICAL, textHorizontalAttrs, textTitleAttrs, textVerticalAttrs} from '../core';
+import { axisBottom, axisLeft, DataAxis, dataAxis } from '../axis';
+import {chart, COLORS_CATEGORICAL} from '../core';
 import {
   dataChartPoint,
   DataChartPoint
 } from './chart-point';
 import {
-  dataPointsCreation,
-  DataPointsCreation,
   dataSeriesPoint,
   seriesPoint,
   seriesPointLine,

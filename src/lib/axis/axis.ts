@@ -42,7 +42,7 @@ export function axisLeft<
   PDatum
 >(
   selection: Selection<GElement, Datum, PElement, PDatum>,
-  alignment: string  = 'flex-start'
+  alignment: string = 'flex-start'
 ): Selection<GElement, Datum, PElement, PDatum> {
   return axis(selection)
     .classed('axis-left', true)

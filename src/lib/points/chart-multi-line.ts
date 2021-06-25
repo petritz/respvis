@@ -136,7 +136,7 @@ export function chartMultiLine<Datum extends DataChartMultiLine, PElement extend
       s.append('g')
         .layout('grid-area', '1 / 1')
         .datum((d) => dataAxis())
-        .call((s) => axisLeft(s));
+        .call((s) => axisLeft(s, 'center'));
 
       s.append('g')
         .layout('grid-area', '2 / 2')

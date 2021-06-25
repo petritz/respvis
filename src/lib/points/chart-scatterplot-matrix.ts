@@ -1,22 +1,16 @@
 import { BaseType, select, Selection } from 'd3-selection';
-import { ScaleBand, ScaleContinuousNumeric, scaleBand, scaleLinear } from 'd3-scale';
-import { axisBottom, axisLeft, ConfigureAxisFn, dataAxis, DataAxis } from '../axis';
+import { scaleLinear } from 'd3-scale';
+import { axisBottom, axisLeft, dataAxis, DataAxis } from '../axis';
 import {
   chart,
   debug,
   nodeToString,
-  textHorizontalAttrs,
-  textTitleAttrs,
-  textVerticalAttrs
 } from '../core';
 import {
   DataChartPoint,
   dataChartPoint
 } from './chart-point';
 import {
-  dataPointsCreation,
-  DataPointsCreation,
-  DataSeriesPoint,
   dataSeriesPoint,
   seriesPoint,
 } from './series-point';

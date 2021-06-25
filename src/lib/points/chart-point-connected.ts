@@ -1,12 +1,10 @@
 import { BaseType, select, Selection } from 'd3-selection';
-import { axisBottom, axisLeft, ConfigureAxisFn, DataAxis, dataAxis } from '../axis';
-import { chart, textHorizontalAttrs, textTitleAttrs, textVerticalAttrs } from '../core';
+import { axisBottom, axisLeft, DataAxis, dataAxis } from '../axis';
+import { chart } from '../core';
 import {
   DataChartPoint
 } from './chart-point';
 import {
-  dataPointsCreation,
-  DataPointsCreation,
   DataSeriesPoint,
   dataSeriesPoint,
   seriesPoint,
@@ -60,7 +58,7 @@ export function chartPointConnected<Datum extends DataChartPoint, PElement exten
       s.append('g')
         .layout('grid-area', '1 / 1')
         .datum((d) => dataAxis())
-        .call((s) => axisLeft(s));
+        .call((s) => axisLeft(s, 'center'));
 
       s.append('g')
         .layout('grid-area', '2 / 2')
