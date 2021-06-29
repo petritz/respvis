@@ -13,6 +13,7 @@ import {
   dataChartPoint,
   DataChartPoint
 } from './chart-point';
+import { DataLegend, dataLegendSquares, legend } from '../legend';
 import {
   dataChartLine,
   DataChartLine
@@ -30,9 +31,11 @@ import {
 export interface DataChartMultiLine {
   mainTitle: string;
   crossTitle: string;
+  innerValues: string[];
   mainScale: ScaleAny<any, number, number>;
   crossScale: ScaleAny<any, number, number>;
   configureMainAxis: ConfigureAxisFn;
+  legendColors: string[];
   configureCrossAxis: ConfigureAxisFn;
   datasets: DataChartLine[];
 }
@@ -62,6 +65,7 @@ export function dataChartMultiLine(data?: Partial<DataChartMultiLine>): DataChar
 
   const mainTitle = data?.mainTitle || '';
   const crossTitle = data?.crossTitle || '';
+  const legendColors: string[] = [];
 
   const dataChartLines: DataChartLine[] = [];
   for (let i = 0; i < datasets.length; i++) {
@@ -75,6 +79,7 @@ export function dataChartMultiLine(data?: Partial<DataChartMultiLine>): DataChar
       drawPoints: true,
       lineColor: COLORS_CATEGORICAL[colorIndex]
     }));
+    legendColors.push(COLORS_CATEGORICAL[colorIndex]);
   }
 
   return {
@@ -83,7 +88,9 @@ export function dataChartMultiLine(data?: Partial<DataChartMultiLine>): DataChar
     configureMainAxis: data?.configureMainAxis || (() => {}),
     configureCrossAxis: data?.configureCrossAxis || (() => {}),
     datasets: dataChartLines,
+    innerValues: data?.innerValues || [],
     mainScale,
+    legendColors: legendColors,
     crossScale
   };
 }
@@ -96,10 +103,32 @@ export function chartMultiLine<Datum extends DataChartMultiLine, PElement extend
     .each((d, i, g) => {
       const s = select<SVGSVGElement, Datum>(g[i])
         .layout('display','grid')
+        .layout('grid-template', 'auto 1fr / 1fr ')
+        .layout('padding', '20px');
+
+        s
+        .append('g')
+        .classed('legend', true)
+        .datum(
+          dataLegendSquares({
+            labels: d.innerValues,
+            colors: d.legendColors,
+          })
+        )
+        .call((s) => legend(s))
+        .layout('grid-template', 'auto / auto ')
+        .layout('margin', '0.5rem')
+        .layout('justify-content', 'flex-end')
+        .layout('flex-direction', 'column');
+
+        const chartContainer = s
+        .append('svg')
+        .classed('chart-container', true)
+        .layout('display','grid')
         .layout('grid-template', '1fr auto / auto 1fr')
         .layout('padding', '20px');
 
-      const drawArea = s
+      const drawArea = chartContainer
         .append('svg')
         .classed('draw-area', true)
         .layout('grid-area', '1 / 2')
@@ -133,12 +162,12 @@ export function chartMultiLine<Datum extends DataChartMultiLine, PElement extend
         }
 
       }
-      s.append('g')
+      chartContainer.append('g')
         .layout('grid-area', '1 / 1')
         .datum((d) => dataAxis())
         .call((s) => axisLeft(s, 'center'));
 
-      s.append('g')
+        chartContainer.append('g')
         .layout('grid-area', '2 / 2')
         .datum((d) => dataAxis())
         .call((s) => axisBottom(s, 'center'));
@@ -154,6 +183,10 @@ export function chartMultiLineDataChange<Datum extends DataChartMultiLine, PElem
 ): Selection<SVGSVGElement, Datum, PElement, PDatum> {
   return selection.each(function (chartData, i, g) {
     const s = select<SVGSVGElement, Datum>(g[i]);
+
+    // s.selectAll('.legend')
+    // .layout('justify-content', 'flex-end')
+    // .layout('flex-direction', 'row');
     const axisConfig = (selection: Selection<Element, DataAxis>, main: boolean) =>
       selection
         .datum((d) =>

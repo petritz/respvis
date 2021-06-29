@@ -18,5 +18,6 @@ export default {
             mainValues: [1,2,4,5,5.5],
             crossValues: [100,200,300,100,500]
         }
-    ]
+    ],
+    legendData: ['data 1', 'data 2', 'data 3', 'data 4']
 };
