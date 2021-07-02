@@ -32,14 +32,20 @@
           mainTitle: 'Main Axis',
           crossTitle: 'Cross Axis',
           innerValues: data.legendData,
-          datasets: data.datasets
+          datasets: data.datasets,
         }),
-        chart = layouter.append('svg').datum(chartDatum).call(respVis.chartMultiLine)
-
+        chart = layouter.append('svg').datum(chartDatum).call(respVis.chartMultiLine),
+        legend = chart.selectAll('.legend');
       window.addEventListener('resize', configure);
       configure();
 
       function configure() {
+        var smallScreen = window.matchMedia(wideMediaQuery).matches
+        var legendLayout = !smallScreen ? 'auto / auto' : '1 / 2';
+        var chartLayout = !smallScreen ? '1fr auto / 1fr ' : '1fr auto / 1fr auto';
+        legend.layout('grid-template', legendLayout);
+        chart.layout('grid-template', chartLayout);
+
         if (window.matchMedia(wideMediaQuery).matches) {
         }
       }

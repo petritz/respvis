@@ -103,7 +103,16 @@ export function chartMultiLine<Datum extends DataChartMultiLine, PElement extend
     .each((d, i, g) => {
       const s = select<SVGSVGElement, Datum>(g[i])
         .layout('display','grid')
-        .layout('grid-template', 'auto 1fr / 1fr ')
+        // .layout('grid-template', '1fr auto / 1fr auto')
+        // .layout('grid-template', '1fr auto / 1fr ')
+        .layout('grid-template', '')
+        .layout('padding', '20px');
+
+        const chartContainer = s
+        .append('svg')
+        .classed('chart-container', true)
+        .layout('display','grid')
+        .layout('grid-template', '1fr auto / auto 1fr')
         .layout('padding', '20px');
 
         s
@@ -116,23 +125,19 @@ export function chartMultiLine<Datum extends DataChartMultiLine, PElement extend
           })
         )
         .call((s) => legend(s))
-        .layout('grid-template', 'auto / auto ')
+        // .layout('grid-template', '1 / 2')
+        // .layout('grid-template', 'auto / auto ')
+        .layout('grid-template', '')
         .layout('margin', '0.5rem')
         .layout('justify-content', 'flex-end')
         .layout('flex-direction', 'column');
-
-        const chartContainer = s
-        .append('svg')
-        .classed('chart-container', true)
-        .layout('display','grid')
-        .layout('grid-template', '1fr auto / auto 1fr')
-        .layout('padding', '20px');
 
       const drawArea = chartContainer
         .append('svg')
         .classed('draw-area', true)
         .layout('grid-area', '1 / 2')
-        .layout('display', 'grid');
+        .layout('display', 'grid')
+        .style('overflow', 'visible');
 
       drawArea
         .append('rect')
@@ -184,9 +189,6 @@ export function chartMultiLineDataChange<Datum extends DataChartMultiLine, PElem
   return selection.each(function (chartData, i, g) {
     const s = select<SVGSVGElement, Datum>(g[i]);
 
-    // s.selectAll('.legend')
-    // .layout('justify-content', 'flex-end')
-    // .layout('flex-direction', 'row');
     const axisConfig = (selection: Selection<Element, DataAxis>, main: boolean) =>
       selection
         .datum((d) =>
